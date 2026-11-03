@@ -1,6 +1,6 @@
 # Echo
 
-**Hear the whole city in a second.** Echo works out which noise detectors fire across a simulated city, frame by
+**Hear the whole city in seconds.** Echo works out which noise detectors fire across a simulated city, frame by
 frame, with exactly the same answer as the original frame-by-frame simulator. Runs that took hours now take
 seconds.
 
