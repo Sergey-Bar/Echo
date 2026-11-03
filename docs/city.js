@@ -180,7 +180,9 @@
   }
 
   function loop(now) {
-    const dt = Math.min(100, now - lastNow);  // a long gap (hidden tab) never jumps the simulation ahead
+    // Clamped both ways: a long gap (hidden tab) never jumps the simulation ahead, and the first frame's timestamp
+    // can be slightly earlier than the moment this script started, which must not step time backwards to frame -1.
+    const dt = Math.max(0, Math.min(100, now - lastNow));
     lastNow = now;
     if (onScreen && !document.hidden) {
       if (playing) {
