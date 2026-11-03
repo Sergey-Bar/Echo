@@ -323,23 +323,12 @@ python -m pytest tests</pre>
 <script>
 const DEMO = {"map": ["................................................................", "................................................................", "..#######..######.........########..######..###########..#####..", "..#######..######.........########..######..###########..#####..", ".......##..######.........########..######..###########..#####..", "..##...##..######.........########..######..###########..#####..", "..#######..######.........########..######..###########..#####..", "..#######..######.........########..######..###########..#####..", "................................................................", "................................................................", "..###########..########..#######..#######..#########..#######...", "..###########..########..#######..#######..#########..#######...", "..###########..########..#######..#######..#########..#######...", "..###########..########..#######..#######..#########..#######...", "................................................................", "................................................................", "..########..######..########..##########..##########..########..", "..########..######..########..##########..##########..########..", "..########..######..########..##########..##########..########..", "..########..######..########..##########..##########..########..", "..########..######..########..##########..##########..########..", "..########..######..########..##########..##########..########..", "..########..######..########..##########..##########..########..", "..########..######..########..##########..##########..########..", "................................................................", "................................................................", "..##########..######..###########..############..######..#####..", "..##########..######..###########..############..######..#####..", "..........##..######..###########..############..######..#####..", "..##......##..######..###########..############..######..#####..", "..##......##..######..###########..############..######..#####..", "..##########..######..###########..############..######..#####..", "..##########..######..###########..############..######..#####..", "................................................................", "................................................................", "..############..#########..#####..#########..############..###..", "..############..#########..#####..#########..############..###..", "............##..#########..#####..#########..############..###..", "................................................................", "................................................................"], "vehicles": [{"id": "vehicle_0", "loudness": 14, "frames_per_cell": 2, "loop": true, "waypoints": [{"cell": [9, 18], "wait_frames": 0}, {"cell": [34, 11], "wait_frames": 30}]}, {"id": "vehicle_1", "loudness": 23, "frames_per_cell": 4, "loop": false, "waypoints": [{"cell": [25, 46], "wait_frames": 10}, {"cell": [3, 43], "wait_frames": 30}, {"cell": [31, 56], "wait_frames": 10}, {"cell": [38, 9], "wait_frames": 30}]}, {"id": "vehicle_2", "loudness": 10, "frames_per_cell": 4, "loop": true, "waypoints": [{"cell": [14, 22], "wait_frames": 0}, {"cell": [3, 63], "wait_frames": 10}, {"cell": [8, 47], "wait_frames": 10}]}, {"id": "vehicle_3", "loudness": 23, "frames_per_cell": 4, "loop": true, "waypoints": [{"cell": [0, 8], "wait_frames": 30}, {"cell": [28, 20], "wait_frames": 30}, {"cell": [38, 43], "wait_frames": 30}, {"cell": [7, 43], "wait_frames": 0}]}, {"id": "vehicle_4", "loudness": 11, "frames_per_cell": 3, "loop": true, "waypoints": [{"cell": [33, 50], "wait_frames": 0}, {"cell": [1, 63], "wait_frames": 0}, {"cell": [2, 22], "wait_frames": 0}]}, {"id": "vehicle_5", "loudness": 19, "frames_per_cell": 1, "loop": false, "waypoints": [{"cell": [38, 44], "wait_frames": 0}, {"cell": [37, 6], "wait_frames": 0}]}], "detectors": [{"id": "detector_0", "cell": [25, 16]}, {"id": "detector_1", "cell": [8, 42]}, {"id": "detector_2", "cell": [15, 2]}, {"id": "detector_3", "cell": [24, 21]}, {"id": "detector_4", "cell": [39, 53]}, {"id": "detector_5", "cell": [24, 55]}, {"id": "detector_6", "cell": [33, 35]}, {"id": "detector_7", "cell": [7, 23]}, {"id": "detector_8", "cell": [6, 43]}, {"id": "detector_9", "cell": [33, 63]}, {"id": "detector_10", "cell": [33, 18]}, {"id": "detector_11", "cell": [33, 47]}, {"id": "detector_12", "cell": [33, 54]}, {"id": "detector_13", "cell": [20, 18]}, {"id": "detector_14", "cell": [4, 5]}, {"id": "detector_15", "cell": [8, 33]}, {"id": "detector_16", "cell": [5, 23]}, {"id": "detector_17", "cell": [24, 11]}, {"id": "detector_18", "cell": [15, 28]}, {"id": "detector_19", "cell": [33, 44]}, {"id": "detector_20", "cell": [9, 4]}, {"id": "detector_21", "cell": [34, 57]}, {"id": "detector_22", "cell": [0, 47]}, {"id": "detector_23", "cell": [12, 0]}], "threshold": 14, "n_frames": 1200};
 
-// Live city: the demo scenario, played with the same rules (BFS noise, shortest-path routes, threshold).
-(() => {
-  const canvas = document.getElementById("city"), ctx = canvas.getContext("2d");
-  const button = document.getElementById("toggle"), frameLabel = document.getElementById("frame");
-  const firingLabel = document.getElementById("firing");
-  const { map, vehicles, detectors, threshold, n_frames } = DEMO;
+// The simulator's rules in JavaScript: routes, positions and noise for the demo city.
+// Shared by the page (city.js draws it) and tests/test_demo_page.py (checks it against Echo).
+function buildModel({ map, vehicles, threshold, n_frames }) {
   const H = map.length, W = map[0].length, open = map.map(r => [...r].map(c => c === "."));
   const isOpen = (r, c) => r >= 0 && r < H && c >= 0 && c < W && open[r][c];
-  const cell = Math.floor(Math.min(1280 / W, 800 / H)), CW = W * cell, CH = H * cell;
-  const dpr = Math.min(2, window.devicePixelRatio || 1);
-  canvas.width = CW * dpr; canvas.height = CH * dpr;
-  const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
-  const C = {
-    street: css("--street"), lane: css("--lane"), roof: css("--building"), roofEdge: css("--building-edge"),
-    roofUnit: css("--building-unit"), ink: css("--ink"), amber: css("--amber"), white: css("--white"),
-  };
-  const MOVES = [[-1, 0], [1, 0], [0, -1], [0, 1]];
+  const MOVES = [[-1, 0], [1, 0], [0, -1], [0, 1]];  // up, down, left, right: the simulator's tie-break order
 
   function bfs(r0, c0, limit) {
     const d = new Int32Array(H * W).fill(-1), q = [r0 * W + c0];
@@ -399,8 +388,9 @@ const DEMO = {"map": [".........................................................
     }
     return cache.get(key);
   }
-  // reach < 1 draws only the part of each vehicle's sound within that fraction of its range (the opening echo).
-  function noiseAt(f, reach) {
+  // Total noise per cell on frame f. reach < 1 keeps only the part of each vehicle's sound within that
+  // fraction of its range (the page's opening echo); reach 1 is the exact simulator rule.
+  function noiseAt(f, reach = 1) {
     const out = new Float32Array(H * W);
     for (const t of tracks) {
       const [r, c] = t.cellAt(f), L = t.v.loudness, list = contribution(r, c, L), limit = reach * L;
@@ -408,6 +398,26 @@ const DEMO = {"map": [".........................................................
     }
     return out;
   }
+  return { H, W, open, isOpen, MOVES, tracks, noiseAt, threshold, n_frames };
+}
+if (typeof module !== "undefined") module.exports = { buildModel };
+
+// Live city: the demo scenario, played with the same rules (BFS noise, shortest-path routes, threshold).
+(() => {
+  const canvas = document.getElementById("city"), ctx = canvas.getContext("2d");
+  const button = document.getElementById("toggle"), frameLabel = document.getElementById("frame");
+  const firingLabel = document.getElementById("firing");
+  const { detectors, threshold, n_frames } = DEMO;
+  const model = buildModel(DEMO);  // the tested rules: see docs/model.js and tests/test_demo_page.py
+  const { H, W, open, isOpen, MOVES, tracks, noiseAt } = model;
+  const cell = Math.floor(Math.min(1280 / W, 800 / H)), CW = W * cell, CH = H * cell;
+  const dpr = Math.min(2, window.devicePixelRatio || 1);
+  canvas.width = CW * dpr; canvas.height = CH * dpr;
+  const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+  const C = {
+    street: css("--street"), lane: css("--lane"), roof: css("--building"), roofEdge: css("--building-edge"),
+    roofUnit: css("--building-unit"), ink: css("--ink"), amber: css("--amber"), white: css("--white"),
+  };
 
   function layer(draw) {  // an offscreen canvas at the same resolution as the visible one
     const c = document.createElement("canvas");
@@ -454,36 +464,39 @@ const DEMO = {"map": [".........................................................
     }
   });
 
-  // Heatmap: one pixel per cell, scaled up with smoothing. Pale cyan to teal below the threshold;
-  // deep blue at or above it, where a detector would fire.
-  const heat = document.createElement("canvas");
-  heat.width = W; heat.height = H;
-  const heatCtx = heat.getContext("2d"), heatImg = heatCtx.createImageData(W, H);
+  // Heatmap in two layers, one pixel per cell:
+  // - glow: pale cyan to teal by loudness, scaled up smoothly, purely for looks;
+  // - fire: the exact cells at or above the threshold, deep blue, scaled up crisply. Smoothing this layer
+  //   would spread "fires" colour onto cells below the threshold, next to sensors that correctly stay idle.
+  const pixels = () => { const c = document.createElement("canvas"); c.width = W; c.height = H; return c; };
+  const glow = pixels(), fire = pixels();
+  const glowCtx = glow.getContext("2d"), fireCtx = fire.getContext("2d");
+  const glowImg = glowCtx.createImageData(W, H), fireImg = fireCtx.createImageData(W, H);
   const rgb = hex => [1, 3, 5].map(i => parseInt(hex.slice(i, i + 2), 16));
   const LOW = rgb(css("--heat-low")), HIGH = rgb(css("--heat-high")), FIRE = rgb(css("--heat-fire"));
   function paintHeat(noise) {
-    const px = heatImg.data;
+    const g = glowImg.data, f = fireImg.data;
     for (let k = 0; k < W * H; k++) {
-      const n = noise[k], o = k * 4;
-      if (n <= 0) { px[o + 3] = 0; continue; }
-      const t = n / threshold;
-      const rgb = t >= 1 ? FIRE : LOW.map((v, i) => v + (HIGH[i] - v) * t);
-      px[o] = rgb[0]; px[o + 1] = rgb[1]; px[o + 2] = rgb[2];
-      px[o + 3] = t >= 1 ? 235 : 70 + 150 * t;
+      const n = noise[k], o = k * 4, t = Math.min(1, n / threshold);
+      f[o] = FIRE[0]; f[o + 1] = FIRE[1]; f[o + 2] = FIRE[2]; f[o + 3] = n >= threshold ? 235 : 0;
+      if (n <= 0) { g[o + 3] = 0; continue; }
+      for (let i = 0; i < 3; i++) g[o + i] = LOW[i] + (HIGH[i] - LOW[i]) * t;
+      g[o + 3] = 30 + 190 * t;
     }
-    // Building pixels take their loudest street neighbour's colour, so smoothing never fades streets toward
+    // Building pixels take their loudest street neighbour's glow, so smoothing never fades a street toward
     // transparent at a wall (a pale halo). Buildings are drawn on top, so these pixels never show.
     for (let r = 0; r < H; r++) for (let c = 0; c < W; c++) {
       if (open[r][c]) continue;
       const o = (r * W + c) * 4;
-      px[o + 3] = 0;
+      g[o + 3] = 0;
       for (const [dr, dc] of MOVES) {
         if (!isOpen(r + dr, c + dc)) continue;
         const n = ((r + dr) * W + c + dc) * 4;
-        if (px[n + 3] > px[o + 3]) { px[o] = px[n]; px[o + 1] = px[n + 1]; px[o + 2] = px[n + 2]; px[o + 3] = px[n + 3]; }
+        if (g[n + 3] > g[o + 3]) { g[o] = g[n]; g[o + 1] = g[n + 1]; g[o + 2] = g[n + 2]; g[o + 3] = g[n + 3]; }
       }
     }
-    heatCtx.putImageData(heatImg, 0, 0);
+    glowCtx.putImageData(glowImg, 0, 0);
+    fireCtx.putImageData(fireImg, 0, 0);
   }
 
   function car(x, y, heading) {  // top-down car, nose pointing along `heading` (radians)
@@ -530,7 +543,9 @@ const DEMO = {"map": [".........................................................
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.drawImage(streets, 0, 0);
     ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = "high";
-    ctx.drawImage(heat, 0, 0, canvas.width, canvas.height);
+    ctx.drawImage(glow, 0, 0, canvas.width, canvas.height);
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(fire, 0, 0, canvas.width, canvas.height);
     ctx.drawImage(buildings, 0, 0);  // on top: sound never shows through a building
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 

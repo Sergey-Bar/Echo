@@ -16,6 +16,7 @@ demo = {
     "n_frames": scenario["n_frames"],
 }
 template = (ROOT / "docs/index.template.html").read_text(encoding="utf-8")
-template = template.replace("/*CITY_SCRIPT*/", (ROOT / "docs/city.js").read_text(encoding="utf-8"))
+scripts = [(ROOT / "docs" / name).read_text(encoding="utf-8") for name in ("model.js", "city.js")]
+template = template.replace("/*CITY_SCRIPT*/", "\n".join(scripts))
 (ROOT / "docs/index.html").write_text(template.replace("/*DEMO_DATA*/null", json.dumps(demo)), encoding="utf-8")
 print("wrote docs/index.html")

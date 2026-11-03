@@ -3,9 +3,9 @@
   const canvas = document.getElementById("city"), ctx = canvas.getContext("2d");
   const button = document.getElementById("toggle"), frameLabel = document.getElementById("frame");
   const firingLabel = document.getElementById("firing");
-  const { map, vehicles, detectors, threshold, n_frames } = DEMO;
-  const H = map.length, W = map[0].length, open = map.map(r => [...r].map(c => c === "."));
-  const isOpen = (r, c) => r >= 0 && r < H && c >= 0 && c < W && open[r][c];
+  const { detectors, threshold, n_frames } = DEMO;
+  const model = buildModel(DEMO);  // the tested rules: see docs/model.js and tests/test_demo_page.py
+  const { H, W, open, isOpen, MOVES, tracks, noiseAt } = model;
   const cell = Math.floor(Math.min(1280 / W, 800 / H)), CW = W * cell, CH = H * cell;
   const dpr = Math.min(2, window.devicePixelRatio || 1);
   canvas.width = CW * dpr; canvas.height = CH * dpr;
@@ -14,75 +14,6 @@
     street: css("--street"), lane: css("--lane"), roof: css("--building"), roofEdge: css("--building-edge"),
     roofUnit: css("--building-unit"), ink: css("--ink"), amber: css("--amber"), white: css("--white"),
   };
-  const MOVES = [[-1, 0], [1, 0], [0, -1], [0, 1]];
-
-  function bfs(r0, c0, limit) {
-    const d = new Int32Array(H * W).fill(-1), q = [r0 * W + c0];
-    d[q[0]] = 0;
-    for (let i = 0; i < q.length; i++) {
-      const k = q[i], r = (k / W) | 0, c = k % W;
-      if (d[k] >= limit) continue;
-      for (const [dr, dc] of MOVES) {
-        const rr = r + dr, cc = c + dc;
-        if (!isOpen(rr, cc) || d[rr * W + cc] >= 0) continue;
-        d[rr * W + cc] = d[k] + 1; q.push(rr * W + cc);
-      }
-    }
-    return d;
-  }
-  function path(a, b) {  // lexicographically first shortest path, as in Echo
-    const toGoal = bfs(b[0], b[1], 1e9), out = [a];
-    let [r, c] = a;
-    while (r !== b[0] || c !== b[1]) {
-      const here = toGoal[r * W + c];
-      for (const [dr, dc] of MOVES) {
-        const rr = r + dr, cc = c + dc;
-        if (isOpen(rr, cc) && toGoal[rr * W + cc] === here - 1) { r = rr; c = cc; break; }
-      }
-      out.push([r, c]);
-    }
-    return out;
-  }
-  // Timeline per vehicle, one entry per frame of a lap (or of the whole trip, then parked):
-  // `cells` is the cell the noise rule uses; `pos` is where to draw it, sliding toward the next cell
-  // while the vehicle moves, exactly like the simulator's own draw positions.
-  const tracks = vehicles.map(v => {
-    const wps = v.loop ? [...v.waypoints, v.waypoints[0]] : v.waypoints, cells = [], pos = [];
-    const wait = (c, n) => { for (let i = 0; i < n; i++) { cells.push(c); pos.push(c); } };
-    wait(wps[0].cell, wps[0].wait_frames || 0);
-    for (let i = 1; i < wps.length; i++) {
-      const p = path(wps[i - 1].cell, wps[i].cell), n = v.frames_per_cell;
-      for (let j = 0; j < p.length - 1; j++) {
-        const [a, b] = [p[j], p[j + 1]];
-        for (let k = 0; k < n; k++) { cells.push(a); pos.push([a[0] + (b[0] - a[0]) * k / n, a[1] + (b[1] - a[1]) * k / n]); }
-      }
-      if (!(v.loop && i === wps.length - 1)) wait(wps[i].cell, wps[i].wait_frames || 0);
-    }
-    const last = v.loop ? null : wps[wps.length - 1].cell;
-    const pick = list => f => v.loop ? list[f % list.length] : (list[f] || last);
-    return { v, cellAt: pick(cells), posAt: pick(pos), heading: 0 };
-  });
-
-  // Noise one vehicle makes from one cell, cached: flat triples of (cell index, level, steps).
-  const cache = new Map();
-  function contribution(r, c, L) {
-    const key = (r * W + c) * 128 + L;
-    if (!cache.has(key)) {
-      const d = bfs(r, c, L - 1), out = [];
-      for (let k = 0; k < d.length; k++) if (d[k] >= 0 && d[k] < L) out.push(k, L - d[k], d[k]);
-      cache.set(key, Int32Array.from(out));
-    }
-    return cache.get(key);
-  }
-  // reach < 1 draws only the part of each vehicle's sound within that fraction of its range (the opening echo).
-  function noiseAt(f, reach) {
-    const out = new Float32Array(H * W);
-    for (const t of tracks) {
-      const [r, c] = t.cellAt(f), L = t.v.loudness, list = contribution(r, c, L), limit = reach * L;
-      for (let i = 0; i < list.length; i += 3) if (list[i + 2] <= limit) out[list[i]] += list[i + 1];
-    }
-    return out;
-  }
 
   function layer(draw) {  // an offscreen canvas at the same resolution as the visible one
     const c = document.createElement("canvas");
@@ -129,36 +60,39 @@
     }
   });
 
-  // Heatmap: one pixel per cell, scaled up with smoothing. Pale cyan to teal below the threshold;
-  // deep blue at or above it, where a detector would fire.
-  const heat = document.createElement("canvas");
-  heat.width = W; heat.height = H;
-  const heatCtx = heat.getContext("2d"), heatImg = heatCtx.createImageData(W, H);
+  // Heatmap in two layers, one pixel per cell:
+  // - glow: pale cyan to teal by loudness, scaled up smoothly, purely for looks;
+  // - fire: the exact cells at or above the threshold, deep blue, scaled up crisply. Smoothing this layer
+  //   would spread "fires" colour onto cells below the threshold, next to sensors that correctly stay idle.
+  const pixels = () => { const c = document.createElement("canvas"); c.width = W; c.height = H; return c; };
+  const glow = pixels(), fire = pixels();
+  const glowCtx = glow.getContext("2d"), fireCtx = fire.getContext("2d");
+  const glowImg = glowCtx.createImageData(W, H), fireImg = fireCtx.createImageData(W, H);
   const rgb = hex => [1, 3, 5].map(i => parseInt(hex.slice(i, i + 2), 16));
   const LOW = rgb(css("--heat-low")), HIGH = rgb(css("--heat-high")), FIRE = rgb(css("--heat-fire"));
   function paintHeat(noise) {
-    const px = heatImg.data;
+    const g = glowImg.data, f = fireImg.data;
     for (let k = 0; k < W * H; k++) {
-      const n = noise[k], o = k * 4;
-      if (n <= 0) { px[o + 3] = 0; continue; }
-      const t = n / threshold;
-      const rgb = t >= 1 ? FIRE : LOW.map((v, i) => v + (HIGH[i] - v) * t);
-      px[o] = rgb[0]; px[o + 1] = rgb[1]; px[o + 2] = rgb[2];
-      px[o + 3] = t >= 1 ? 235 : 70 + 150 * t;
+      const n = noise[k], o = k * 4, t = Math.min(1, n / threshold);
+      f[o] = FIRE[0]; f[o + 1] = FIRE[1]; f[o + 2] = FIRE[2]; f[o + 3] = n >= threshold ? 235 : 0;
+      if (n <= 0) { g[o + 3] = 0; continue; }
+      for (let i = 0; i < 3; i++) g[o + i] = LOW[i] + (HIGH[i] - LOW[i]) * t;
+      g[o + 3] = 30 + 190 * t;
     }
-    // Building pixels take their loudest street neighbour's colour, so smoothing never fades streets toward
+    // Building pixels take their loudest street neighbour's glow, so smoothing never fades a street toward
     // transparent at a wall (a pale halo). Buildings are drawn on top, so these pixels never show.
     for (let r = 0; r < H; r++) for (let c = 0; c < W; c++) {
       if (open[r][c]) continue;
       const o = (r * W + c) * 4;
-      px[o + 3] = 0;
+      g[o + 3] = 0;
       for (const [dr, dc] of MOVES) {
         if (!isOpen(r + dr, c + dc)) continue;
         const n = ((r + dr) * W + c + dc) * 4;
-        if (px[n + 3] > px[o + 3]) { px[o] = px[n]; px[o + 1] = px[n + 1]; px[o + 2] = px[n + 2]; px[o + 3] = px[n + 3]; }
+        if (g[n + 3] > g[o + 3]) { g[o] = g[n]; g[o + 1] = g[n + 1]; g[o + 2] = g[n + 2]; g[o + 3] = g[n + 3]; }
       }
     }
-    heatCtx.putImageData(heatImg, 0, 0);
+    glowCtx.putImageData(glowImg, 0, 0);
+    fireCtx.putImageData(fireImg, 0, 0);
   }
 
   function car(x, y, heading) {  // top-down car, nose pointing along `heading` (radians)
@@ -205,7 +139,9 @@
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.drawImage(streets, 0, 0);
     ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = "high";
-    ctx.drawImage(heat, 0, 0, canvas.width, canvas.height);
+    ctx.drawImage(glow, 0, 0, canvas.width, canvas.height);
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(fire, 0, 0, canvas.width, canvas.height);
     ctx.drawImage(buildings, 0, 0);  // on top: sound never shows through a building
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
