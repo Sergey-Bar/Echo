@@ -1,10 +1,10 @@
 name: demo
 n_frames: 1200
-threshold: 20
+threshold: 14
 map: demo_map.txt
 vehicles:
 - id: vehicle_0
-  loudness: 24
+  loudness: 14
   frames_per_cell: 2
   loop: true
   waypoints:
@@ -17,55 +17,55 @@ vehicles:
     - 11
     wait_frames: 30
 - id: vehicle_1
-  loudness: 28
-  frames_per_cell: 3
+  loudness: 23
+  frames_per_cell: 4
   loop: false
   waypoints:
   - cell:
     - 25
     - 46
-    wait_frames: 30
+    wait_frames: 10
   - cell:
     - 3
     - 43
-    wait_frames: 10
+    wait_frames: 30
   - cell:
     - 31
     - 56
-    wait_frames: 30
+    wait_frames: 10
   - cell:
     - 38
     - 9
-    wait_frames: 0
+    wait_frames: 30
 - id: vehicle_2
-  loudness: 33
-  frames_per_cell: 2
-  loop: true
-  waypoints:
-  - cell:
-    - 8
-    - 47
-    wait_frames: 10
-  - cell:
-    - 9
-    - 34
-    wait_frames: 10
-  - cell:
-    - 14
-    - 25
-    wait_frames: 0
-- id: vehicle_3
-  loudness: 32
+  loudness: 10
   frames_per_cell: 4
   loop: true
   waypoints:
   - cell:
+    - 14
+    - 22
+    wait_frames: 0
+  - cell:
+    - 3
+    - 63
+    wait_frames: 10
+  - cell:
     - 8
-    - 36
+    - 47
+    wait_frames: 10
+- id: vehicle_3
+  loudness: 23
+  frames_per_cell: 4
+  loop: true
+  waypoints:
+  - cell:
+    - 0
+    - 8
     wait_frames: 30
   - cell:
-    - 37
-    - 2
+    - 28
+    - 20
     wait_frames: 30
   - cell:
     - 38
@@ -76,7 +76,7 @@ vehicles:
     - 43
     wait_frames: 0
 - id: vehicle_4
-  loudness: 18
+  loudness: 11
   frames_per_cell: 3
   loop: true
   waypoints:
@@ -93,7 +93,7 @@ vehicles:
     - 22
     wait_frames: 0
 - id: vehicle_5
-  loudness: 34
+  loudness: 19
   frames_per_cell: 1
   loop: false
   waypoints:

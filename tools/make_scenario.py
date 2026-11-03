@@ -44,6 +44,7 @@ def main() -> None:
     parser.add_argument("--detectors", type=int, default=24)
     parser.add_argument("--frames", type=int, default=1200)
     parser.add_argument("--threshold", type=int, default=20)
+    parser.add_argument("--loudness", type=int, nargs=2, default=[15, 35], metavar=("MIN", "MAX"))
     parser.add_argument("--seed", type=int, default=7)
     args = parser.parse_args()
 
@@ -61,7 +62,7 @@ def main() -> None:
         loop = rng.random() < 0.7 and cells[-1] != cells[0]
         vehicles.append({
             "id": f"vehicle_{index}",
-            "loudness": rng.randint(15, 35),
+            "loudness": rng.randint(*args.loudness),
             "frames_per_cell": rng.randint(1, 4),
             "loop": loop,
             "waypoints": [{"cell": cell, "wait_frames": rng.choice([0, 0, 10, 30])} for cell in cells],

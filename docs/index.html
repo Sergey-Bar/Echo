@@ -18,12 +18,14 @@
   --hairline: #D9D9DE;
   /* Data: the only colour on the page */
   --white: #FFFFFF;
-  --street: #F7F9FB;
-  --building: #D3D8DE;
-  --teal-1: #CDEDEF;
-  --teal-2: #8FD6DB;
-  --teal-3: #3FB5BF;
-  --teal-4: #0E9AA7;
+  --street: #E9ECF0;
+  --lane: #FFFFFF;
+  --building: #D4D9DF;
+  --building-edge: #B3BBC5;
+  --building-unit: #C4CBD3;
+  --heat-low: #8FDEE4;
+  --heat-high: #0E9AA7;
+  --heat-fire: #123E7C;
   --amber: #F2B705;
   --font: -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", system-ui, Roboto, "Helvetica Neue", Arial, sans-serif;
   --mono: ui-monospace, "SF Mono", "Cascadia Mono", Consolas, monospace;
@@ -89,18 +91,18 @@ h1, h2, h3 { margin: 0; font-weight: 700; text-wrap: balance; }
 .cta { display: flex; flex-wrap: wrap; justify-content: center; gap: 14px; margin-top: 32px; }
 
 .stage { max-width: 1280px; margin: 56px auto 0; padding: 0 24px; }
-.stage canvas { width: 100%; height: auto; display: block; border-radius: 20px; image-rendering: pixelated; background: var(--street); }
+.stage canvas { width: 100%; height: auto; display: block; border-radius: 20px; background: var(--street); }
 .stage-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 12px 28px; padding: 18px 0 8px; font-size: .9rem; color: var(--ink-soft); }
 .small-pill { min-height: 36px; padding: 0 18px; border-radius: 999px; border: 0; background: var(--bg-soft); color: var(--ink);
   font: 600 .9rem var(--font); cursor: pointer; min-width: 76px; }
 @media (hover: hover) { .small-pill:hover { background: var(--hairline); } }
 .legend { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px 18px; }
-.legend span { display: inline-flex; align-items: center; gap: 7px; }
-.sw { width: 12px; height: 12px; display: inline-block; border-radius: 3px; }
-.sw-v { background: var(--ink); border-radius: 50%; }
-.sw-n { background: linear-gradient(90deg, var(--teal-1) 0 25%, var(--teal-2) 25% 50%, var(--teal-3) 50% 75%, var(--teal-4) 75%); }
-.sw-d { background: var(--white); border: 2px solid var(--ink); border-radius: 0; }
-.sw-f { background: var(--amber); border: 2px solid var(--ink); border-radius: 0; outline: 2px solid var(--ink); outline-offset: 2px; margin: 0 4px; }
+.legend span { display: inline-flex; align-items: center; gap: 7px; white-space: nowrap; }
+.legend svg { display: block; flex: none; }
+.heat-key { display: inline-flex; width: 64px; height: 10px; border-radius: 5px; overflow: hidden; }
+.heat-key i { display: block; height: 100%; }
+.heat-key .ramp { flex: 3; background: linear-gradient(90deg, var(--heat-low), var(--heat-high)); }
+.heat-key .fire { flex: 1; background: var(--heat-fire); }
 .status { font-variant-numeric: tabular-nums; }
 .status strong { color: var(--ink); font-weight: 600; }
 .status span { margin-left: 12px; }
@@ -199,10 +201,11 @@ footer a { color: var(--ink); }
         <button id="toggle" class="small-pill" type="button">Pause</button>
         <span class="status"><strong id="firing">0 of 0 detectors firing</strong><span id="frame">frame 0</span></span>
         <span class="legend">
-          <span><i class="sw sw-v"></i>Vehicle</span>
-          <span><i class="sw sw-n"></i>Noise, darkest is loud enough to fire</span>
-          <span><i class="sw sw-d"></i>Detector</span>
-          <span><i class="sw sw-f"></i>Firing, ringed</span>
+          <span><svg width="22" height="14" viewBox="0 0 22 14" aria-hidden="true"><rect x="1" y="1" width="20" height="12" rx="3.5" fill="var(--ink)"/><rect x="12.5" y="3" width="3" height="8" rx="1" fill="var(--white)"/></svg>Vehicle</span>
+          <span><span class="heat-key" aria-hidden="true"><i class="ramp"></i><i class="fire"></i></span>Noise, deep blue fires</span>
+          <span><svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><rect x="1.5" y="1.5" width="15" height="15" fill="var(--building)" stroke="var(--building-edge)" stroke-width="2"/></svg>Building</span>
+          <span><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6" fill="var(--white)" stroke="var(--ink)" stroke-width="2"/><circle cx="8" cy="8" r="2" fill="var(--ink)"/></svg>Detector</span>
+          <span><svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true"><circle cx="11" cy="11" r="9.5" fill="none" stroke="var(--ink)" stroke-width="1.5"/><circle cx="11" cy="11" r="6" fill="var(--amber)" stroke="var(--ink)" stroke-width="2"/><circle cx="11" cy="11" r="2" fill="var(--ink)"/></svg>Firing, ringed</span>
         </span>
       </figcaption>
     </figure>
@@ -268,7 +271,7 @@ footer a { color: var(--ink); }
             <tr><th scope="row">Big city<small>400×400 map, 2,000 detectors</small></th><td>~6.5 h</td><td class="after">3.2 s</td><td class="x">7,300×</td></tr>
             <tr><th scope="row">Long patrol<small>12 vehicles, 6,000 detectors</small></th><td>~6 h</td><td class="after">3.7 s</td><td class="x">5,800×</td></tr>
             <tr><th scope="row">Sensor grid<small>6 vehicles, 12,000 detectors</small></th><td>~7 h</td><td class="after">6.7 s</td><td class="x">3,800×</td></tr>
-            <tr><th scope="row">Demo city<small>included in the repo</small></th><td>10.6 s</td><td class="after">0.03 s</td><td class="x">350×</td></tr>
+            <tr><th scope="row">Demo city<small>included in the repo</small></th><td>10.6 s</td><td class="after">0.02 s</td><td class="x">530×</td></tr>
           </tbody>
         </table>
       </div>
@@ -318,7 +321,7 @@ python -m pytest tests</pre>
 </footer>
 
 <script>
-const DEMO = {"map": ["................................................................", "................................................................", "..#######..######.........########..######..###########..#####..", "..#######..######.........########..######..###########..#####..", ".......##..######.........########..######..###########..#####..", "..##...##..######.........########..######..###########..#####..", "..#######..######.........########..######..###########..#####..", "..#######..######.........########..######..###########..#####..", "................................................................", "................................................................", "..###########..########..#######..#######..#########..#######...", "..###########..########..#######..#######..#########..#######...", "..###########..########..#######..#######..#########..#######...", "..###########..########..#######..#######..#########..#######...", "................................................................", "................................................................", "..########..######..########..##########..##########..########..", "..########..######..########..##########..##########..########..", "..########..######..########..##########..##########..########..", "..########..######..########..##########..##########..########..", "..########..######..########..##########..##########..########..", "..########..######..########..##########..##########..########..", "..########..######..########..##########..##########..########..", "..########..######..########..##########..##########..########..", "................................................................", "................................................................", "..##########..######..###########..############..######..#####..", "..##########..######..###########..############..######..#####..", "..........##..######..###########..############..######..#####..", "..##......##..######..###########..############..######..#####..", "..##......##..######..###########..############..######..#####..", "..##########..######..###########..############..######..#####..", "..##########..######..###########..############..######..#####..", "................................................................", "................................................................", "..############..#########..#####..#########..############..###..", "..############..#########..#####..#########..############..###..", "............##..#########..#####..#########..############..###..", "................................................................", "................................................................"], "vehicles": [{"id": "vehicle_0", "loudness": 24, "frames_per_cell": 2, "loop": true, "waypoints": [{"cell": [9, 18], "wait_frames": 0}, {"cell": [34, 11], "wait_frames": 30}]}, {"id": "vehicle_1", "loudness": 28, "frames_per_cell": 3, "loop": false, "waypoints": [{"cell": [25, 46], "wait_frames": 30}, {"cell": [3, 43], "wait_frames": 10}, {"cell": [31, 56], "wait_frames": 30}, {"cell": [38, 9], "wait_frames": 0}]}, {"id": "vehicle_2", "loudness": 33, "frames_per_cell": 2, "loop": true, "waypoints": [{"cell": [8, 47], "wait_frames": 10}, {"cell": [9, 34], "wait_frames": 10}, {"cell": [14, 25], "wait_frames": 0}]}, {"id": "vehicle_3", "loudness": 32, "frames_per_cell": 4, "loop": true, "waypoints": [{"cell": [8, 36], "wait_frames": 30}, {"cell": [37, 2], "wait_frames": 30}, {"cell": [38, 43], "wait_frames": 30}, {"cell": [7, 43], "wait_frames": 0}]}, {"id": "vehicle_4", "loudness": 18, "frames_per_cell": 3, "loop": true, "waypoints": [{"cell": [33, 50], "wait_frames": 0}, {"cell": [1, 63], "wait_frames": 0}, {"cell": [2, 22], "wait_frames": 0}]}, {"id": "vehicle_5", "loudness": 34, "frames_per_cell": 1, "loop": false, "waypoints": [{"cell": [38, 44], "wait_frames": 0}, {"cell": [37, 6], "wait_frames": 0}]}], "detectors": [{"id": "detector_0", "cell": [25, 16]}, {"id": "detector_1", "cell": [8, 42]}, {"id": "detector_2", "cell": [15, 2]}, {"id": "detector_3", "cell": [24, 21]}, {"id": "detector_4", "cell": [39, 53]}, {"id": "detector_5", "cell": [24, 55]}, {"id": "detector_6", "cell": [33, 35]}, {"id": "detector_7", "cell": [7, 23]}, {"id": "detector_8", "cell": [6, 43]}, {"id": "detector_9", "cell": [33, 63]}, {"id": "detector_10", "cell": [33, 18]}, {"id": "detector_11", "cell": [33, 47]}, {"id": "detector_12", "cell": [33, 54]}, {"id": "detector_13", "cell": [20, 18]}, {"id": "detector_14", "cell": [4, 5]}, {"id": "detector_15", "cell": [8, 33]}, {"id": "detector_16", "cell": [5, 23]}, {"id": "detector_17", "cell": [24, 11]}, {"id": "detector_18", "cell": [15, 28]}, {"id": "detector_19", "cell": [33, 44]}, {"id": "detector_20", "cell": [9, 4]}, {"id": "detector_21", "cell": [34, 57]}, {"id": "detector_22", "cell": [0, 47]}, {"id": "detector_23", "cell": [12, 0]}], "threshold": 20, "n_frames": 1200};
+const DEMO = {"map": ["................................................................", "................................................................", "..#######..######.........########..######..###########..#####..", "..#######..######.........########..######..###########..#####..", ".......##..######.........########..######..###########..#####..", "..##...##..######.........########..######..###########..#####..", "..#######..######.........########..######..###########..#####..", "..#######..######.........########..######..###########..#####..", "................................................................", "................................................................", "..###########..########..#######..#######..#########..#######...", "..###########..########..#######..#######..#########..#######...", "..###########..########..#######..#######..#########..#######...", "..###########..########..#######..#######..#########..#######...", "................................................................", "................................................................", "..########..######..########..##########..##########..########..", "..########..######..########..##########..##########..########..", "..########..######..########..##########..##########..########..", "..########..######..########..##########..##########..########..", "..########..######..########..##########..##########..########..", "..########..######..########..##########..##########..########..", "..########..######..########..##########..##########..########..", "..########..######..########..##########..##########..########..", "................................................................", "................................................................", "..##########..######..###########..############..######..#####..", "..##########..######..###########..############..######..#####..", "..........##..######..###########..############..######..#####..", "..##......##..######..###########..############..######..#####..", "..##......##..######..###########..############..######..#####..", "..##########..######..###########..############..######..#####..", "..##########..######..###########..############..######..#####..", "................................................................", "................................................................", "..############..#########..#####..#########..############..###..", "..############..#########..#####..#########..############..###..", "............##..#########..#####..#########..############..###..", "................................................................", "................................................................"], "vehicles": [{"id": "vehicle_0", "loudness": 14, "frames_per_cell": 2, "loop": true, "waypoints": [{"cell": [9, 18], "wait_frames": 0}, {"cell": [34, 11], "wait_frames": 30}]}, {"id": "vehicle_1", "loudness": 23, "frames_per_cell": 4, "loop": false, "waypoints": [{"cell": [25, 46], "wait_frames": 10}, {"cell": [3, 43], "wait_frames": 30}, {"cell": [31, 56], "wait_frames": 10}, {"cell": [38, 9], "wait_frames": 30}]}, {"id": "vehicle_2", "loudness": 10, "frames_per_cell": 4, "loop": true, "waypoints": [{"cell": [14, 22], "wait_frames": 0}, {"cell": [3, 63], "wait_frames": 10}, {"cell": [8, 47], "wait_frames": 10}]}, {"id": "vehicle_3", "loudness": 23, "frames_per_cell": 4, "loop": true, "waypoints": [{"cell": [0, 8], "wait_frames": 30}, {"cell": [28, 20], "wait_frames": 30}, {"cell": [38, 43], "wait_frames": 30}, {"cell": [7, 43], "wait_frames": 0}]}, {"id": "vehicle_4", "loudness": 11, "frames_per_cell": 3, "loop": true, "waypoints": [{"cell": [33, 50], "wait_frames": 0}, {"cell": [1, 63], "wait_frames": 0}, {"cell": [2, 22], "wait_frames": 0}]}, {"id": "vehicle_5", "loudness": 19, "frames_per_cell": 1, "loop": false, "waypoints": [{"cell": [38, 44], "wait_frames": 0}, {"cell": [37, 6], "wait_frames": 0}]}], "detectors": [{"id": "detector_0", "cell": [25, 16]}, {"id": "detector_1", "cell": [8, 42]}, {"id": "detector_2", "cell": [15, 2]}, {"id": "detector_3", "cell": [24, 21]}, {"id": "detector_4", "cell": [39, 53]}, {"id": "detector_5", "cell": [24, 55]}, {"id": "detector_6", "cell": [33, 35]}, {"id": "detector_7", "cell": [7, 23]}, {"id": "detector_8", "cell": [6, 43]}, {"id": "detector_9", "cell": [33, 63]}, {"id": "detector_10", "cell": [33, 18]}, {"id": "detector_11", "cell": [33, 47]}, {"id": "detector_12", "cell": [33, 54]}, {"id": "detector_13", "cell": [20, 18]}, {"id": "detector_14", "cell": [4, 5]}, {"id": "detector_15", "cell": [8, 33]}, {"id": "detector_16", "cell": [5, 23]}, {"id": "detector_17", "cell": [24, 11]}, {"id": "detector_18", "cell": [15, 28]}, {"id": "detector_19", "cell": [33, 44]}, {"id": "detector_20", "cell": [9, 4]}, {"id": "detector_21", "cell": [34, 57]}, {"id": "detector_22", "cell": [0, 47]}, {"id": "detector_23", "cell": [12, 0]}], "threshold": 14, "n_frames": 1200};
 
 // Live city: the demo scenario, played with the same rules (BFS noise, shortest-path routes, threshold).
 (() => {
@@ -327,11 +330,15 @@ const DEMO = {"map": [".........................................................
   const firingLabel = document.getElementById("firing");
   const { map, vehicles, detectors, threshold, n_frames } = DEMO;
   const H = map.length, W = map[0].length, open = map.map(r => [...r].map(c => c === "."));
-  const cell = Math.floor(Math.min(1280 / W, 800 / H));
-  canvas.width = W * cell; canvas.height = H * cell;
+  const isOpen = (r, c) => r >= 0 && r < H && c >= 0 && c < W && open[r][c];
+  const cell = Math.floor(Math.min(1280 / W, 800 / H)), CW = W * cell, CH = H * cell;
+  const dpr = Math.min(2, window.devicePixelRatio || 1);
+  canvas.width = CW * dpr; canvas.height = CH * dpr;
   const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
-  const C = { street: css("--street"), building: css("--building"), ink: css("--ink"), amber: css("--amber"),
-              white: css("--white"), teal: [css("--teal-1"), css("--teal-2"), css("--teal-3"), css("--teal-4")] };
+  const C = {
+    street: css("--street"), lane: css("--lane"), roof: css("--building"), roofEdge: css("--building-edge"),
+    roofUnit: css("--building-unit"), ink: css("--ink"), amber: css("--amber"), white: css("--white"),
+  };
   const MOVES = [[-1, 0], [1, 0], [0, -1], [0, 1]];
 
   function bfs(r0, c0, limit) {
@@ -342,7 +349,7 @@ const DEMO = {"map": [".........................................................
       if (d[k] >= limit) continue;
       for (const [dr, dc] of MOVES) {
         const rr = r + dr, cc = c + dc;
-        if (rr < 0 || rr >= H || cc < 0 || cc >= W || !open[rr][cc] || d[rr * W + cc] >= 0) continue;
+        if (!isOpen(rr, cc) || d[rr * W + cc] >= 0) continue;
         d[rr * W + cc] = d[k] + 1; q.push(rr * W + cc);
       }
     }
@@ -355,7 +362,7 @@ const DEMO = {"map": [".........................................................
       const here = toGoal[r * W + c];
       for (const [dr, dc] of MOVES) {
         const rr = r + dr, cc = c + dc;
-        if (rr >= 0 && rr < H && cc >= 0 && cc < W && toGoal[rr * W + cc] === here - 1) { r = rr; c = cc; break; }
+        if (isOpen(rr, cc) && toGoal[rr * W + cc] === here - 1) { r = rr; c = cc; break; }
       }
       out.push([r, c]);
     }
@@ -378,7 +385,7 @@ const DEMO = {"map": [".........................................................
     }
     const last = v.loop ? null : wps[wps.length - 1].cell;
     const pick = list => f => v.loop ? list[f % list.length] : (list[f] || last);
-    return { v, cellAt: pick(cells), posAt: pick(pos) };
+    return { v, cellAt: pick(cells), posAt: pick(pos), heading: 0 };
   });
 
   // Noise one vehicle makes from one cell, cached: flat triples of (cell index, level, steps).
@@ -402,6 +409,106 @@ const DEMO = {"map": [".........................................................
     return out;
   }
 
+  function layer(draw) {  // an offscreen canvas at the same resolution as the visible one
+    const c = document.createElement("canvas");
+    c.width = canvas.width; c.height = canvas.height;
+    const g = c.getContext("2d");
+    g.scale(dpr, dpr); draw(g);
+    return c;
+  }
+  // Streets: asphalt with dashed centre lines down the middle of two-lane roads.
+  const streets = layer(g => {
+    g.fillStyle = C.street; g.fillRect(0, 0, CW, CH);
+    g.strokeStyle = C.lane; g.lineWidth = Math.max(1, cell * 0.08); g.setLineDash([cell * 0.5, cell * 0.5]);
+    g.beginPath();
+    for (let r = 0; r + 1 < H; r++) for (let c = 0; c < W; c++) {  // horizontal road: two open rows, walls both sides
+      if (isOpen(r, c) && isOpen(r + 1, c) && !isOpen(r - 1, c) && !isOpen(r + 2, c)) {
+        g.moveTo(c * cell, (r + 1) * cell); g.lineTo((c + 1) * cell, (r + 1) * cell);
+      }
+    }
+    for (let c = 0; c + 1 < W; c++) for (let r = 0; r < H; r++) {  // vertical road
+      if (isOpen(r, c) && isOpen(r, c + 1) && !isOpen(r, c - 1) && !isOpen(r, c + 2)) {
+        g.moveTo((c + 1) * cell, r * cell); g.lineTo((c + 1) * cell, (r + 1) * cell);
+      }
+    }
+    g.stroke();
+  });
+  // Buildings: flat roofs, a darker parapet on every street-facing edge, and a few rooftop units.
+  const buildings = layer(g => {
+    g.fillStyle = C.roof;
+    for (let r = 0; r < H; r++) for (let c = 0; c < W; c++) if (!open[r][c]) g.fillRect(c * cell, r * cell, cell, cell);
+    const edge = Math.max(2, cell * 0.14);
+    g.fillStyle = C.roofEdge;
+    for (let r = 0; r < H; r++) for (let c = 0; c < W; c++) {
+      if (open[r][c]) continue;
+      const x = c * cell, y = r * cell;
+      if (isOpen(r - 1, c)) g.fillRect(x, y, cell, edge);
+      if (isOpen(r + 1, c)) g.fillRect(x, y + cell - edge, cell, edge);
+      if (isOpen(r, c - 1)) g.fillRect(x, y, edge, cell);
+      if (isOpen(r, c + 1)) g.fillRect(x + cell - edge, y, edge, cell);
+    }
+    g.fillStyle = C.roofUnit;
+    for (let r = 1; r < H - 1; r++) for (let c = 1; c < W - 1; c++) {
+      const inner = !open[r][c] && MOVES.every(([dr, dc]) => !open[r + dr][c + dc]) && !open[r + 1][c + 1];
+      if (inner && (r * 31 + c * 17) % 23 === 0) g.fillRect(c * cell + cell * 0.3, r * cell + cell * 0.3, cell * 1.1, cell * 0.8);
+    }
+  });
+
+  // Heatmap: one pixel per cell, scaled up with smoothing. Pale cyan to teal below the threshold;
+  // deep blue at or above it, where a detector would fire.
+  const heat = document.createElement("canvas");
+  heat.width = W; heat.height = H;
+  const heatCtx = heat.getContext("2d"), heatImg = heatCtx.createImageData(W, H);
+  const rgb = hex => [1, 3, 5].map(i => parseInt(hex.slice(i, i + 2), 16));
+  const LOW = rgb(css("--heat-low")), HIGH = rgb(css("--heat-high")), FIRE = rgb(css("--heat-fire"));
+  function paintHeat(noise) {
+    const px = heatImg.data;
+    for (let k = 0; k < W * H; k++) {
+      const n = noise[k], o = k * 4;
+      if (n <= 0) { px[o + 3] = 0; continue; }
+      const t = n / threshold;
+      const rgb = t >= 1 ? FIRE : LOW.map((v, i) => v + (HIGH[i] - v) * t);
+      px[o] = rgb[0]; px[o + 1] = rgb[1]; px[o + 2] = rgb[2];
+      px[o + 3] = t >= 1 ? 235 : 70 + 150 * t;
+    }
+    // Building pixels take their loudest street neighbour's colour, so smoothing never fades streets toward
+    // transparent at a wall (a pale halo). Buildings are drawn on top, so these pixels never show.
+    for (let r = 0; r < H; r++) for (let c = 0; c < W; c++) {
+      if (open[r][c]) continue;
+      const o = (r * W + c) * 4;
+      px[o + 3] = 0;
+      for (const [dr, dc] of MOVES) {
+        if (!isOpen(r + dr, c + dc)) continue;
+        const n = ((r + dr) * W + c + dc) * 4;
+        if (px[n + 3] > px[o + 3]) { px[o] = px[n]; px[o + 1] = px[n + 1]; px[o + 2] = px[n + 2]; px[o + 3] = px[n + 3]; }
+      }
+    }
+    heatCtx.putImageData(heatImg, 0, 0);
+  }
+
+  function car(x, y, heading) {  // top-down car, nose pointing along `heading` (radians)
+    const len = cell * 1.45, wid = cell * 0.86, rad = cell * 0.24;
+    ctx.save(); ctx.translate(x, y); ctx.rotate(heading);
+    ctx.fillStyle = C.ink; ctx.beginPath(); ctx.roundRect(-len / 2, -wid / 2, len, wid, rad); ctx.fill();
+    ctx.fillStyle = C.white;  // windscreen and rear window
+    ctx.beginPath(); ctx.roundRect(len * 0.08, -wid * 0.34, len * 0.2, wid * 0.68, cell * 0.06); ctx.fill();
+    ctx.globalAlpha = 0.55;
+    ctx.beginPath(); ctx.roundRect(-len * 0.38, -wid * 0.3, len * 0.12, wid * 0.6, cell * 0.05); ctx.fill();
+    ctx.restore();
+  }
+  function sensor(x, y, on, ping) {  // round detector with a microphone dot; firing = amber plus a lasting ring
+    const r = cell * 0.62;
+    if (ping < 1) {
+      ctx.globalAlpha = 1 - ping; ctx.strokeStyle = C.amber; ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.arc(x, y, r + 6 + easeOut(ping) * cell * 1.6, 0, Math.PI * 2); ctx.stroke();
+      ctx.globalAlpha = 1;
+    }
+    if (on) { ctx.strokeStyle = C.ink; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(x, y, r + 5, 0, Math.PI * 2); ctx.stroke(); }
+    ctx.fillStyle = on ? C.amber : C.white; ctx.strokeStyle = C.ink; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = C.ink; ctx.beginPath(); ctx.arc(x, y, r * 0.32, 0, Math.PI * 2); ctx.fill();
+  }
+
   const SIM_FPS = 20, ECHO_MS = 700, PING_MS = 400;
   const easeOut = p => 1 - (1 - p) ** 3;
   const reduced = matchMedia("(prefers-reduced-motion: reduce)");
@@ -418,39 +525,31 @@ const DEMO = {"map": [".........................................................
     if (echo < 1 || noiseFrame !== frame) {
       noise = noiseAt(frame, echo < 1 ? easeOut(echo) : 1);
       noiseFrame = echo < 1 ? -1 : frame;
+      paintHeat(noise);
     }
-    for (let r = 0; r < H; r++) for (let c = 0; c < W; c++) {
-      const n = noise[r * W + c];
-      // Darkest step = loud enough to fire a detector on this cell.
-      const level = n >= threshold ? 3 : n >= threshold * 0.6 ? 2 : n >= threshold * 0.3 ? 1 : 0;
-      ctx.fillStyle = !open[r][c] ? C.building : n <= 0 ? C.street : C.teal[level];
-      ctx.fillRect(c * cell, r * cell, cell, cell);
-    }
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.drawImage(streets, 0, 0);
+    ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = "high";
+    ctx.drawImage(heat, 0, 0, canvas.width, canvas.height);
+    ctx.drawImage(buildings, 0, 0);  // on top: sound never shows through a building
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
     let firingCount = 0, pinging = false;
     detectors.forEach((det, i) => {
-      const [r, c] = det.cell, on = noise[r * W + c] >= threshold, x = c * cell, y = r * cell;
+      const [r, c] = det.cell, on = noise[r * W + c] >= threshold;
       if (on && !firing[i] && motion) pingStart[i] = now;
       firing[i] = on;
-      if (on) {  // shape cue as well as colour: a ring stays around a firing detector
-        firingCount++;
-        ctx.strokeStyle = C.ink; ctx.lineWidth = 2; ctx.strokeRect(x - 5, y - 5, cell + 10, cell + 10);
-      }
+      if (on) firingCount++;
       const ping = (now - pingStart[i]) / PING_MS;
-      if (ping < 1) {  // one expanding, fading ring as a detector starts firing
-        pinging = true;
-        const grow = 5 + easeOut(ping) * cell * 1.4;
-        ctx.globalAlpha = 1 - ping; ctx.strokeStyle = C.amber; ctx.lineWidth = 3;
-        ctx.strokeRect(x - grow, y - grow, cell + grow * 2, cell + grow * 2);
-        ctx.globalAlpha = 1;
-      }
-      ctx.fillStyle = C.ink; ctx.fillRect(x - 2, y - 2, cell + 4, cell + 4);
-      ctx.fillStyle = on ? C.amber : C.white; ctx.fillRect(x, y, cell, cell);
+      if (ping < 1) pinging = true;
+      sensor(c * cell + cell / 2, r * cell + cell / 2, on, ping);
     });
     for (const t of tracks) {
       const a = motion ? t.posAt(frame) : t.cellAt(frame), b = motion ? t.posAt(frame + 1) : a;
+      const next = t.posAt(frame + 1), here = t.posAt(frame);
+      if (next[0] !== here[0] || next[1] !== here[1]) t.heading = Math.atan2(next[0] - here[0], next[1] - here[1]);
       const r = a[0] + (b[0] - a[0]) * frac, c = a[1] + (b[1] - a[1]) * frac;
-      ctx.fillStyle = C.ink; ctx.beginPath();
-      ctx.arc(c * cell + cell / 2, r * cell + cell / 2, cell * 0.75, 0, Math.PI * 2); ctx.fill();
+      car(c * cell + cell / 2, r * cell + cell / 2, t.heading);
     }
     if (frame !== shownFrame) {
       shownFrame = frame;

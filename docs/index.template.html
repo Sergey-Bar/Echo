@@ -18,12 +18,14 @@
   --hairline: #D9D9DE;
   /* Data: the only colour on the page */
   --white: #FFFFFF;
-  --street: #F7F9FB;
-  --building: #D3D8DE;
-  --teal-1: #CDEDEF;
-  --teal-2: #8FD6DB;
-  --teal-3: #3FB5BF;
-  --teal-4: #0E9AA7;
+  --street: #E9ECF0;
+  --lane: #FFFFFF;
+  --building: #D4D9DF;
+  --building-edge: #B3BBC5;
+  --building-unit: #C4CBD3;
+  --heat-low: #8FDEE4;
+  --heat-high: #0E9AA7;
+  --heat-fire: #123E7C;
   --amber: #F2B705;
   --font: -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", system-ui, Roboto, "Helvetica Neue", Arial, sans-serif;
   --mono: ui-monospace, "SF Mono", "Cascadia Mono", Consolas, monospace;
@@ -89,18 +91,18 @@ h1, h2, h3 { margin: 0; font-weight: 700; text-wrap: balance; }
 .cta { display: flex; flex-wrap: wrap; justify-content: center; gap: 14px; margin-top: 32px; }
 
 .stage { max-width: 1280px; margin: 56px auto 0; padding: 0 24px; }
-.stage canvas { width: 100%; height: auto; display: block; border-radius: 20px; image-rendering: pixelated; background: var(--street); }
+.stage canvas { width: 100%; height: auto; display: block; border-radius: 20px; background: var(--street); }
 .stage-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 12px 28px; padding: 18px 0 8px; font-size: .9rem; color: var(--ink-soft); }
 .small-pill { min-height: 36px; padding: 0 18px; border-radius: 999px; border: 0; background: var(--bg-soft); color: var(--ink);
   font: 600 .9rem var(--font); cursor: pointer; min-width: 76px; }
 @media (hover: hover) { .small-pill:hover { background: var(--hairline); } }
 .legend { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px 18px; }
-.legend span { display: inline-flex; align-items: center; gap: 7px; }
-.sw { width: 12px; height: 12px; display: inline-block; border-radius: 3px; }
-.sw-v { background: var(--ink); border-radius: 50%; }
-.sw-n { background: linear-gradient(90deg, var(--teal-1) 0 25%, var(--teal-2) 25% 50%, var(--teal-3) 50% 75%, var(--teal-4) 75%); }
-.sw-d { background: var(--white); border: 2px solid var(--ink); border-radius: 0; }
-.sw-f { background: var(--amber); border: 2px solid var(--ink); border-radius: 0; outline: 2px solid var(--ink); outline-offset: 2px; margin: 0 4px; }
+.legend span { display: inline-flex; align-items: center; gap: 7px; white-space: nowrap; }
+.legend svg { display: block; flex: none; }
+.heat-key { display: inline-flex; width: 64px; height: 10px; border-radius: 5px; overflow: hidden; }
+.heat-key i { display: block; height: 100%; }
+.heat-key .ramp { flex: 3; background: linear-gradient(90deg, var(--heat-low), var(--heat-high)); }
+.heat-key .fire { flex: 1; background: var(--heat-fire); }
 .status { font-variant-numeric: tabular-nums; }
 .status strong { color: var(--ink); font-weight: 600; }
 .status span { margin-left: 12px; }
@@ -199,10 +201,11 @@ footer a { color: var(--ink); }
         <button id="toggle" class="small-pill" type="button">Pause</button>
         <span class="status"><strong id="firing">0 of 0 detectors firing</strong><span id="frame">frame 0</span></span>
         <span class="legend">
-          <span><i class="sw sw-v"></i>Vehicle</span>
-          <span><i class="sw sw-n"></i>Noise, darkest is loud enough to fire</span>
-          <span><i class="sw sw-d"></i>Detector</span>
-          <span><i class="sw sw-f"></i>Firing, ringed</span>
+          <span><svg width="22" height="14" viewBox="0 0 22 14" aria-hidden="true"><rect x="1" y="1" width="20" height="12" rx="3.5" fill="var(--ink)"/><rect x="12.5" y="3" width="3" height="8" rx="1" fill="var(--white)"/></svg>Vehicle</span>
+          <span><span class="heat-key" aria-hidden="true"><i class="ramp"></i><i class="fire"></i></span>Noise, deep blue fires</span>
+          <span><svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><rect x="1.5" y="1.5" width="15" height="15" fill="var(--building)" stroke="var(--building-edge)" stroke-width="2"/></svg>Building</span>
+          <span><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6" fill="var(--white)" stroke="var(--ink)" stroke-width="2"/><circle cx="8" cy="8" r="2" fill="var(--ink)"/></svg>Detector</span>
+          <span><svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true"><circle cx="11" cy="11" r="9.5" fill="none" stroke="var(--ink)" stroke-width="1.5"/><circle cx="11" cy="11" r="6" fill="var(--amber)" stroke="var(--ink)" stroke-width="2"/><circle cx="11" cy="11" r="2" fill="var(--ink)"/></svg>Firing, ringed</span>
         </span>
       </figcaption>
     </figure>
@@ -268,7 +271,7 @@ footer a { color: var(--ink); }
             <tr><th scope="row">Big city<small>400×400 map, 2,000 detectors</small></th><td>~6.5 h</td><td class="after">3.2 s</td><td class="x">7,300×</td></tr>
             <tr><th scope="row">Long patrol<small>12 vehicles, 6,000 detectors</small></th><td>~6 h</td><td class="after">3.7 s</td><td class="x">5,800×</td></tr>
             <tr><th scope="row">Sensor grid<small>6 vehicles, 12,000 detectors</small></th><td>~7 h</td><td class="after">6.7 s</td><td class="x">3,800×</td></tr>
-            <tr><th scope="row">Demo city<small>included in the repo</small></th><td>10.6 s</td><td class="after">0.03 s</td><td class="x">350×</td></tr>
+            <tr><th scope="row">Demo city<small>included in the repo</small></th><td>10.6 s</td><td class="after">0.02 s</td><td class="x">530×</td></tr>
           </tbody>
         </table>
       </div>
