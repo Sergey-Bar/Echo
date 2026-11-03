@@ -112,9 +112,13 @@ class Scenario:
 
 def load_scenario(path: str | Path) -> Scenario:
     path = Path(path)
-    # pyyaml's libyaml-backed loader parses the same documents several times faster; fall back when not built in.
-    loader = getattr(yaml, "CSafeLoader", yaml.SafeLoader)
-    raw = yaml.load(path.read_text(encoding="utf-8"), Loader=loader)
+    text = path.read_text(encoding="utf-8")
+    # pyyaml's libyaml-backed loader parses the same documents several times faster. It rejects a few inputs
+    # pyyaml's own scanner accepts (such as "{cell:[0, 0]}"), so any parse error retries with the original loader.
+    try:
+        raw = yaml.load(text, Loader=getattr(yaml, "CSafeLoader", yaml.SafeLoader))
+    except yaml.YAMLError:
+        raw = yaml.safe_load(text)
     return parse_scenario(raw, path.parent)
 
 

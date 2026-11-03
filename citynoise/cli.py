@@ -32,11 +32,15 @@ def run(args: argparse.Namespace) -> None:
     scenario = load_scenario(args.scenario)
     if not args.render and args.dump_frames is None:
         # The log needs only detector cells, so skip building a full noise map per frame.
-        log = detection_log(scenario, args.max_frames)
-        args.out.write_text(json.dumps(log) + "\n", encoding="utf-8")
-        elapsed = time.perf_counter() - started
-        print(f"scenario={scenario.name} frames={log['n_frames']} wall_clock={elapsed:.2f}s log={args.out}")
-        return
+        try:
+            log = detection_log(scenario, args.max_frames)
+        except OverflowError:
+            log = None  # waits or a threshold beyond 64-bit range: the frame-by-frame path below handles them
+        if log is not None:
+            args.out.write_text(json.dumps(log) + "\n", encoding="utf-8")
+            elapsed = time.perf_counter() - started
+            print(f"scenario={scenario.name} frames={log['n_frames']} wall_clock={elapsed:.2f}s log={args.out}")
+            return
 
     frames = Simulation(scenario).frames(args.max_frames)
 

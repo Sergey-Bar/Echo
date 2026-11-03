@@ -69,6 +69,12 @@ Synthetic cities that stress every limit at once, run on **one core with a hard 
 | 100 looping vehicles, 20,000 detectors, 50,000 frames, 400×400 | 169 s | 875 MB |
 | 100 one-way vehicles with 150 stops each, 20,000 detectors, 50,000 frames | 277 s | 929 MB |
 
+**Known limit.** Echo's cost grows with the number of (detector, vehicle move) pairs in earshot. An
+independent review built the worst shape for that: all 20,000 detectors packed into a 142×141 block of an open
+map, with 100 loudness-80 vehicles driving inside it. That run took about 16 minutes on a desktop machine (and
+the original simulator would take far longer). Spread-out cities like the ones above stay well under 5 minutes.
+Making the dense case fast is the next step.
+
 ## Run it
 
 Requires Python 3.12+.

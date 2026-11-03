@@ -287,7 +287,8 @@ footer a { color: var(--ink); }
         <li><b>Reference cities</b><p>Every example city gives a log identical to the original's, and frame-by-frame snapshots match on the small city.</p></li>
         <li><b>300 random cities</b><p>Built to hit edge cases: walled-off regions, vehicles louder than the map, parked vehicles, waits, loops, runs cut short, thresholds from trivial to unreachable.</p></li>
         <li><b>Broken on purpose</b><p>Changing "at least the threshold" to "above the threshold" makes the tests fail. They also caught a real bug during development.</p></li>
-        <li><b>At the limits</b><p>Every limit at once, on one core with a hard 4 GB cap: 169 s and 277 s, under 1 GB of memory, inside the 10-minute budget.</p></li>
+        <li><b>At the limits</b><p>Spread-out cities with every limit at once, on one core with a hard 4 GB cap: 169 s and 277 s, under 1 GB of memory. One known limit: 20,000 detectors packed around 100 of the loudest cars takes about 16 minutes. That's next.</p></li>
+        <li><b>Reviewed independently</b><p>A separate review compared 3,000 random cities and 174,762 routes with the original: identical. It also found two input edge cases, now fixed and tested.</p></li>
       </ul>
     </div>
   </section>
