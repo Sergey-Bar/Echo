@@ -14,6 +14,7 @@ import pytest
 import yaml
 
 from citynoise.fast import detection_log
+from citynoise.noise import noise_field
 from citynoise.scenario import load_scenario
 from citynoise.simulation import Simulation
 
@@ -60,7 +61,10 @@ def test_page_fires_the_same_detectors_as_echo_on_every_frame(page_model):
 
 def test_page_noise_matches_the_original_simulator_everywhere(page_model):
     scenario = load_scenario(ROOT / "examples/demo.yaml")
-    for state in Simulation(scenario).frames(max(SAMPLE_FRAMES) + 1):
-        if state.frame in SAMPLE_FRAMES:
-            page = np.array(page_model["grids"][str(state.frame)]).reshape(state.noise.shape)
-            assert np.array_equal(page, state.noise), f"noise differs on frame {state.frame}"
+    simulation = Simulation(scenario)
+    for frame in SAMPLE_FRAMES:
+        # The original per-frame rule, evaluated only on the sampled frames.
+        expected = sum(noise_field(scenario.city_map, track.cell_at(frame), vehicle.loudness)
+                       for vehicle, track in zip(scenario.vehicles, simulation.tracks))
+        page = np.array(page_model["grids"][str(frame)]).reshape(expected.shape)
+        assert np.array_equal(page, expected), f"noise differs on frame {frame}"

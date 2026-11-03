@@ -271,7 +271,7 @@ footer a { color: var(--ink); }
             <tr><th scope="row">Big city<small>400×400 map, 2,000 detectors</small></th><td>~6.5 h</td><td class="after">3.2 s</td><td class="x">7,300×</td></tr>
             <tr><th scope="row">Long patrol<small>12 vehicles, 6,000 detectors</small></th><td>~6 h</td><td class="after">3.7 s</td><td class="x">5,800×</td></tr>
             <tr><th scope="row">Sensor grid<small>6 vehicles, 12,000 detectors</small></th><td>~7 h</td><td class="after">6.7 s</td><td class="x">3,800×</td></tr>
-            <tr><th scope="row">Demo city<small>included in the repo</small></th><td>10.6 s</td><td class="after">0.02 s</td><td class="x">530×</td></tr>
+            <tr><th scope="row">Demo city<small>included in the repo</small></th><td>12.2 s</td><td class="after">0.02 s</td><td class="x">600×</td></tr>
           </tbody>
         </table>
       </div>
@@ -321,7 +321,7 @@ python -m pytest tests</pre>
 </footer>
 
 <script>
-const DEMO = {"map": ["................................................................", "................................................................", "..#######..######.........########..######..###########..#####..", "..#######..######.........########..######..###########..#####..", ".......##..######.........########..######..###########..#####..", "..##...##..######.........########..######..###########..#####..", "..#######..######.........########..######..###########..#####..", "..#######..######.........########..######..###########..#####..", "................................................................", "................................................................", "..###########..########..#######..#######..#########..#######...", "..###########..########..#######..#######..#########..#######...", "..###########..########..#######..#######..#########..#######...", "..###########..########..#######..#######..#########..#######...", "................................................................", "................................................................", "..########..######..########..##########..##########..########..", "..########..######..########..##########..##########..########..", "..########..######..########..##########..##########..########..", "..########..######..########..##########..##########..########..", "..########..######..########..##########..##########..########..", "..########..######..########..##########..##########..########..", "..########..######..########..##########..##########..########..", "..########..######..########..##########..##########..########..", "................................................................", "................................................................", "..##########..######..###########..############..######..#####..", "..##########..######..###########..############..######..#####..", "..........##..######..###########..############..######..#####..", "..##......##..######..###########..############..######..#####..", "..##......##..######..###########..############..######..#####..", "..##########..######..###########..############..######..#####..", "..##########..######..###########..############..######..#####..", "................................................................", "................................................................", "..############..#########..#####..#########..############..###..", "..############..#########..#####..#########..############..###..", "............##..#########..#####..#########..############..###..", "................................................................", "................................................................"], "vehicles": [{"id": "vehicle_0", "loudness": 14, "frames_per_cell": 2, "loop": true, "waypoints": [{"cell": [9, 18], "wait_frames": 0}, {"cell": [34, 11], "wait_frames": 30}]}, {"id": "vehicle_1", "loudness": 23, "frames_per_cell": 4, "loop": false, "waypoints": [{"cell": [25, 46], "wait_frames": 10}, {"cell": [3, 43], "wait_frames": 30}, {"cell": [31, 56], "wait_frames": 10}, {"cell": [38, 9], "wait_frames": 30}]}, {"id": "vehicle_2", "loudness": 10, "frames_per_cell": 4, "loop": true, "waypoints": [{"cell": [14, 22], "wait_frames": 0}, {"cell": [3, 63], "wait_frames": 10}, {"cell": [8, 47], "wait_frames": 10}]}, {"id": "vehicle_3", "loudness": 23, "frames_per_cell": 4, "loop": true, "waypoints": [{"cell": [0, 8], "wait_frames": 30}, {"cell": [28, 20], "wait_frames": 30}, {"cell": [38, 43], "wait_frames": 30}, {"cell": [7, 43], "wait_frames": 0}]}, {"id": "vehicle_4", "loudness": 11, "frames_per_cell": 3, "loop": true, "waypoints": [{"cell": [33, 50], "wait_frames": 0}, {"cell": [1, 63], "wait_frames": 0}, {"cell": [2, 22], "wait_frames": 0}]}, {"id": "vehicle_5", "loudness": 19, "frames_per_cell": 1, "loop": false, "waypoints": [{"cell": [38, 44], "wait_frames": 0}, {"cell": [37, 6], "wait_frames": 0}]}], "detectors": [{"id": "detector_0", "cell": [25, 16]}, {"id": "detector_1", "cell": [8, 42]}, {"id": "detector_2", "cell": [15, 2]}, {"id": "detector_3", "cell": [24, 21]}, {"id": "detector_4", "cell": [39, 53]}, {"id": "detector_5", "cell": [24, 55]}, {"id": "detector_6", "cell": [33, 35]}, {"id": "detector_7", "cell": [7, 23]}, {"id": "detector_8", "cell": [6, 43]}, {"id": "detector_9", "cell": [33, 63]}, {"id": "detector_10", "cell": [33, 18]}, {"id": "detector_11", "cell": [33, 47]}, {"id": "detector_12", "cell": [33, 54]}, {"id": "detector_13", "cell": [20, 18]}, {"id": "detector_14", "cell": [4, 5]}, {"id": "detector_15", "cell": [8, 33]}, {"id": "detector_16", "cell": [5, 23]}, {"id": "detector_17", "cell": [24, 11]}, {"id": "detector_18", "cell": [15, 28]}, {"id": "detector_19", "cell": [33, 44]}, {"id": "detector_20", "cell": [9, 4]}, {"id": "detector_21", "cell": [34, 57]}, {"id": "detector_22", "cell": [0, 47]}, {"id": "detector_23", "cell": [12, 0]}], "threshold": 14, "n_frames": 1200};
+const DEMO = {"map": ["................................................................", "................................................................", "..#######..######.........########..######..###########..#####..", "..#######..######.........########..######..###########..#####..", ".......##..######.........########..######..###########..#####..", "..##...##..######.........########..######..###########..#####..", "..#######..######.........########..######..###########..#####..", "..#######..######.........########..######..###########..#####..", "................................................................", "................................................................", "..###########..########..#######..#######..#########..#######...", "..###########..########..#######..#######..#########..#######...", "..###########..########..#######..#######..#########..#######...", "..###########..########..#######..#######..#########..#######...", "................................................................", "................................................................", "..########..######..########..##########..##########..########..", "..########..######..########..##########..##########..########..", "..########..######..########..##########..##########..########..", "..########..######..########..##########..##########..########..", "..########..######..########..##########..##########..########..", "..########..######..########..##########..##########..########..", "..########..######..########..##########..##########..########..", "..########..######..########..##########..##########..########..", "................................................................", "................................................................", "..##########..######..###########..############..######..#####..", "..##########..######..###########..############..######..#####..", "..........##..######..###########..############..######..#####..", "..##......##..######..###########..############..######..#####..", "..##......##..######..###########..############..######..#####..", "..##########..######..###########..############..######..#####..", "..##########..######..###########..############..######..#####..", "................................................................", "................................................................", "..############..#########..#####..#########..############..###..", "..############..#########..#####..#########..############..###..", "............##..#########..#####..#########..############..###..", "................................................................", "................................................................"], "vehicles": [{"id": "vehicle_0", "loudness": 16, "frames_per_cell": 1, "loop": true, "waypoints": [{"cell": [9, 18], "wait_frames": 10}, {"cell": [34, 11], "wait_frames": 0}]}, {"id": "vehicle_1", "loudness": 19, "frames_per_cell": 2, "loop": true, "waypoints": [{"cell": [14, 57], "wait_frames": 10}, {"cell": [25, 46], "wait_frames": 0}, {"cell": [34, 16], "wait_frames": 30}, {"cell": [3, 43], "wait_frames": 10}, {"cell": [9, 14], "wait_frames": 30}]}, {"id": "vehicle_2", "loudness": 17, "frames_per_cell": 1, "loop": true, "waypoints": [{"cell": [24, 44], "wait_frames": 0}, {"cell": [14, 22], "wait_frames": 0}, {"cell": [8, 47], "wait_frames": 30}, {"cell": [3, 63], "wait_frames": 0}, {"cell": [9, 34], "wait_frames": 10}]}, {"id": "vehicle_3", "loudness": 19, "frames_per_cell": 3, "loop": true, "waypoints": [{"cell": [15, 63], "wait_frames": 10}, {"cell": [8, 36], "wait_frames": 10}]}, {"id": "vehicle_4", "loudness": 22, "frames_per_cell": 3, "loop": true, "waypoints": [{"cell": [7, 43], "wait_frames": 30}, {"cell": [32, 63], "wait_frames": 30}]}, {"id": "vehicle_5", "loudness": 17, "frames_per_cell": 1, "loop": true, "waypoints": [{"cell": [25, 63], "wait_frames": 0}, {"cell": [5, 34], "wait_frames": 30}, {"cell": [33, 50], "wait_frames": 0}, {"cell": [26, 12], "wait_frames": 0}, {"cell": [1, 63], "wait_frames": 10}]}], "detectors": [{"id": "detector_0", "cell": [39, 50]}, {"id": "detector_1", "cell": [1, 43]}, {"id": "detector_2", "cell": [5, 23]}, {"id": "detector_3", "cell": [0, 0]}, {"id": "detector_4", "cell": [38, 44]}, {"id": "detector_5", "cell": [8, 47]}, {"id": "detector_6", "cell": [37, 6]}, {"id": "detector_7", "cell": [5, 21]}, {"id": "detector_8", "cell": [24, 54]}, {"id": "detector_9", "cell": [0, 52]}, {"id": "detector_10", "cell": [2, 43]}, {"id": "detector_11", "cell": [12, 24]}, {"id": "detector_12", "cell": [25, 16]}, {"id": "detector_13", "cell": [8, 42]}, {"id": "detector_14", "cell": [15, 2]}, {"id": "detector_15", "cell": [24, 21]}, {"id": "detector_16", "cell": [39, 53]}, {"id": "detector_17", "cell": [24, 55]}, {"id": "detector_18", "cell": [33, 35]}, {"id": "detector_19", "cell": [7, 23]}, {"id": "detector_20", "cell": [6, 43]}, {"id": "detector_21", "cell": [33, 63]}, {"id": "detector_22", "cell": [33, 18]}, {"id": "detector_23", "cell": [33, 47]}], "threshold": 12, "n_frames": 1200};
 
 // The simulator's rules in JavaScript: routes, positions and noise for the demo city.
 // Shared by the page (city.js draws it) and tests/test_demo_page.py (checks it against Echo).
@@ -411,8 +411,7 @@ if (typeof module !== "undefined") module.exports = { buildModel };
   const model = buildModel(DEMO);  // the tested rules: see docs/model.js and tests/test_demo_page.py
   const { H, W, open, isOpen, MOVES, tracks, noiseAt } = model;
   const cell = Math.floor(Math.min(1280 / W, 800 / H)), CW = W * cell, CH = H * cell;
-  const dpr = Math.min(2, window.devicePixelRatio || 1);
-  canvas.width = CW * dpr; canvas.height = CH * dpr;
+  let dpr = 1, streets = null, buildings = null;  // sized by setup(), again whenever the pixel density changes
   const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
   const C = {
     street: css("--street"), lane: css("--lane"), roof: css("--building"), roofEdge: css("--building-edge"),
@@ -427,7 +426,7 @@ if (typeof module !== "undefined") module.exports = { buildModel };
     return c;
   }
   // Streets: asphalt with dashed centre lines down the middle of two-lane roads.
-  const streets = layer(g => {
+  const drawStreets = g => {
     g.fillStyle = C.street; g.fillRect(0, 0, CW, CH);
     g.strokeStyle = C.lane; g.lineWidth = Math.max(1, cell * 0.08); g.setLineDash([cell * 0.5, cell * 0.5]);
     g.beginPath();
@@ -442,9 +441,9 @@ if (typeof module !== "undefined") module.exports = { buildModel };
       }
     }
     g.stroke();
-  });
+  };
   // Buildings: flat roofs, a darker parapet on every street-facing edge, and a few rooftop units.
-  const buildings = layer(g => {
+  const drawBuildings = g => {
     g.fillStyle = C.roof;
     for (let r = 0; r < H; r++) for (let c = 0; c < W; c++) if (!open[r][c]) g.fillRect(c * cell, r * cell, cell, cell);
     const edge = Math.max(2, cell * 0.14);
@@ -462,7 +461,14 @@ if (typeof module !== "undefined") module.exports = { buildModel };
       const inner = !open[r][c] && MOVES.every(([dr, dc]) => !open[r + dr][c + dc]) && !open[r + 1][c + 1];
       if (inner && (r * 31 + c * 17) % 23 === 0) g.fillRect(c * cell + cell * 0.3, r * cell + cell * 0.3, cell * 1.1, cell * 0.8);
     }
-  });
+  };
+  function setup() {  // backing store and static layers at the current pixel density (sharp on retina)
+    dpr = Math.min(2, window.devicePixelRatio || 1);
+    canvas.width = CW * dpr; canvas.height = CH * dpr;
+    streets = layer(drawStreets); buildings = layer(drawBuildings);
+    dirty = true;
+    matchMedia(`(resolution: ${window.devicePixelRatio || 1}dppx)`).addEventListener("change", setup, { once: true });
+  }
 
   // Heatmap in two layers, one pixel per cell:
   // - glow: pale cyan to teal by loudness, scaled up smoothly, purely for looks;
@@ -566,9 +572,11 @@ if (typeof module !== "undefined") module.exports = { buildModel };
       const r = a[0] + (b[0] - a[0]) * frac, c = a[1] + (b[1] - a[1]) * frac;
       car(c * cell + cell / 2, r * cell + cell / 2, t.heading);
     }
+    // Labels follow what is drawn, so they also update while the opening echo spreads on an unchanged frame.
+    const firingText = `${firingCount} of ${detectors.length} detectors firing`;
+    if (firingLabel.textContent !== firingText) firingLabel.textContent = firingText;
     if (frame !== shownFrame) {
       shownFrame = frame;
-      firingLabel.textContent = `${firingCount} of ${detectors.length} detectors firing`;
       frameLabel.textContent = `frame ${frame.toLocaleString("en-US")} of ${n_frames.toLocaleString("en-US")}`;
     }
     // Keep drawing while anything still moves; a paused, settled city costs nothing.
@@ -593,6 +601,7 @@ if (typeof module !== "undefined") module.exports = { buildModel };
     playing = p; button.textContent = p ? "Pause" : "Play"; dirty = true;
   }
   button.addEventListener("click", () => setPlaying(!playing));
+  setup();
   setPlaying(playing);
   requestAnimationFrame(loop);
 })();

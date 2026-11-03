@@ -39,8 +39,8 @@ def shortest_path(city_map: CityMap, start: Cell, goal: Cell) -> list[Cell]:
             first = np.ones(candidates.size, dtype=bool)
             first[1:] = candidates[1:] != candidates[:-1]
             candidates = candidates[first]
+            reached.append(candidates)  # recorded before marking, so the reset below always covers every mark
             to_goal[candidates] = steps
-            reached.append(candidates)
         if to_goal[source] < 0:
             raise ScenarioError(f"no open path from {start} to {goal}")
 

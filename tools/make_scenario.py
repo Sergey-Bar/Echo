@@ -45,8 +45,14 @@ def main() -> None:
     parser.add_argument("--frames", type=int, default=1200)
     parser.add_argument("--threshold", type=int, default=20)
     parser.add_argument("--loudness", type=int, nargs=2, default=[15, 35], metavar=("MIN", "MAX"))
+    parser.add_argument("--frames-per-cell", type=int, nargs=2, default=[1, 4], metavar=("MIN", "MAX"))
+    parser.add_argument("--all-loop", action="store_true", help="every vehicle loops, so none parks for good")
     parser.add_argument("--seed", type=int, default=7)
     args = parser.parse_args()
+    for name in ("loudness", "frames_per_cell"):
+        low, high = getattr(args, name)
+        if not 1 <= low <= high:
+            parser.error(f"--{name.replace('_', '-')} needs 1 <= MIN <= MAX")
 
     rng = random.Random(args.seed)
     lines = city_map(rng, args.height, args.width)
@@ -54,16 +60,16 @@ def main() -> None:
 
     vehicles = []
     for index in range(args.vehicles):
-        cells = [rng.choice(open_cells)]
-        while len(cells) < rng.randint(2, 5):
+        cells, count = [rng.choice(open_cells)], rng.randint(2, 5)
+        while len(cells) < count or (args.all_loop and cells[-1] == cells[0]):
             cell = rng.choice(open_cells)
             if cell != cells[-1]:
                 cells.append(cell)
-        loop = rng.random() < 0.7 and cells[-1] != cells[0]
+        loop = (args.all_loop or rng.random() < 0.7) and cells[-1] != cells[0]
         vehicles.append({
             "id": f"vehicle_{index}",
             "loudness": rng.randint(*args.loudness),
-            "frames_per_cell": rng.randint(1, 4),
+            "frames_per_cell": rng.randint(*args.frames_per_cell),
             "loop": loop,
             "waypoints": [{"cell": cell, "wait_frames": rng.choice([0, 0, 10, 30])} for cell in cells],
         })

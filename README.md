@@ -12,7 +12,7 @@ seconds.
 | Sensor grid: 6 vehicles, 12,000 detectors, 30,000 frames | ~7 h (projected) | 6.7 s | ~3,800× |
 | Long patrol: 12 vehicles, 6,000 detectors, 45,000 frames | ~6 h (projected) | 3.7 s | ~5,800× |
 | Big city: 400×400 map, 2,000 detectors, 14,000 frames | ~6.5 h (projected) | 3.2 s | ~7,300× |
-| Included demo city (`examples/demo.yaml`) | 10.6 s | 0.02 s | ~530× |
+| Included demo city (`examples/demo.yaml`) | 12.2 s | 0.02 s | ~600× |
 
 Measured on one CPU core in a Linux container with a 4 GB memory cap. "Projected" means extrapolated from the
 original simulator's first 20 frames, because full runs take hours.

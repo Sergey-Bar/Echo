@@ -1,204 +1,214 @@
 name: demo
 n_frames: 1200
-threshold: 14
+threshold: 12
 map: demo_map.txt
 vehicles:
 - id: vehicle_0
-  loudness: 14
-  frames_per_cell: 2
+  loudness: 16
+  frames_per_cell: 1
   loop: true
   waypoints:
   - cell:
     - 9
     - 18
-    wait_frames: 0
+    wait_frames: 10
   - cell:
     - 34
     - 11
-    wait_frames: 30
+    wait_frames: 0
 - id: vehicle_1
-  loudness: 23
-  frames_per_cell: 4
-  loop: false
-  waypoints:
-  - cell:
-    - 25
-    - 46
-    wait_frames: 10
-  - cell:
-    - 3
-    - 43
-    wait_frames: 30
-  - cell:
-    - 31
-    - 56
-    wait_frames: 10
-  - cell:
-    - 38
-    - 9
-    wait_frames: 30
-- id: vehicle_2
-  loudness: 10
-  frames_per_cell: 4
+  loudness: 19
+  frames_per_cell: 2
   loop: true
   waypoints:
   - cell:
     - 14
-    - 22
+    - 57
+    wait_frames: 10
+  - cell:
+    - 25
+    - 46
     wait_frames: 0
   - cell:
+    - 34
+    - 16
+    wait_frames: 30
+  - cell:
     - 3
+    - 43
+    wait_frames: 10
+  - cell:
+    - 9
+    - 14
+    wait_frames: 30
+- id: vehicle_2
+  loudness: 17
+  frames_per_cell: 1
+  loop: true
+  waypoints:
+  - cell:
+    - 24
+    - 44
+    wait_frames: 0
+  - cell:
+    - 14
+    - 22
+    wait_frames: 0
+  - cell: &id001
+    - 8
+    - 47
+    wait_frames: 30
+  - cell:
+    - 3
+    - 63
+    wait_frames: 0
+  - cell:
+    - 9
+    - 34
+    wait_frames: 10
+- id: vehicle_3
+  loudness: 19
+  frames_per_cell: 3
+  loop: true
+  waypoints:
+  - cell:
+    - 15
     - 63
     wait_frames: 10
   - cell:
     - 8
-    - 47
+    - 36
     wait_frames: 10
-- id: vehicle_3
-  loudness: 23
-  frames_per_cell: 4
-  loop: true
-  waypoints:
-  - cell:
-    - 0
-    - 8
-    wait_frames: 30
-  - cell:
-    - 28
-    - 20
-    wait_frames: 30
-  - cell:
-    - 38
-    - 43
-    wait_frames: 30
-  - cell:
-    - 7
-    - 43
-    wait_frames: 0
 - id: vehicle_4
-  loudness: 11
+  loudness: 22
   frames_per_cell: 3
   loop: true
   waypoints:
+  - cell:
+    - 7
+    - 43
+    wait_frames: 30
+  - cell:
+    - 32
+    - 63
+    wait_frames: 30
+- id: vehicle_5
+  loudness: 17
+  frames_per_cell: 1
+  loop: true
+  waypoints:
+  - cell:
+    - 25
+    - 63
+    wait_frames: 0
+  - cell:
+    - 5
+    - 34
+    wait_frames: 30
   - cell:
     - 33
     - 50
     wait_frames: 0
   - cell:
+    - 26
+    - 12
+    wait_frames: 0
+  - cell:
     - 1
     - 63
-    wait_frames: 0
-  - cell:
-    - 2
-    - 22
-    wait_frames: 0
-- id: vehicle_5
-  loudness: 19
-  frames_per_cell: 1
-  loop: false
-  waypoints:
-  - cell:
-    - 38
-    - 44
-    wait_frames: 0
-  - cell:
-    - 37
-    - 6
-    wait_frames: 0
+    wait_frames: 10
 detectors:
 - id: detector_0
   cell:
+  - 39
+  - 50
+- id: detector_1
+  cell:
+  - 1
+  - 43
+- id: detector_2
+  cell:
+  - 5
+  - 23
+- id: detector_3
+  cell:
+  - 0
+  - 0
+- id: detector_4
+  cell:
+  - 38
+  - 44
+- id: detector_5
+  cell: *id001
+- id: detector_6
+  cell:
+  - 37
+  - 6
+- id: detector_7
+  cell:
+  - 5
+  - 21
+- id: detector_8
+  cell:
+  - 24
+  - 54
+- id: detector_9
+  cell:
+  - 0
+  - 52
+- id: detector_10
+  cell:
+  - 2
+  - 43
+- id: detector_11
+  cell:
+  - 12
+  - 24
+- id: detector_12
+  cell:
   - 25
   - 16
-- id: detector_1
+- id: detector_13
   cell:
   - 8
   - 42
-- id: detector_2
+- id: detector_14
   cell:
   - 15
   - 2
-- id: detector_3
+- id: detector_15
   cell:
   - 24
   - 21
-- id: detector_4
+- id: detector_16
   cell:
   - 39
   - 53
-- id: detector_5
-  cell:
-  - 24
-  - 55
-- id: detector_6
-  cell:
-  - 33
-  - 35
-- id: detector_7
-  cell:
-  - 7
-  - 23
-- id: detector_8
-  cell:
-  - 6
-  - 43
-- id: detector_9
-  cell:
-  - 33
-  - 63
-- id: detector_10
-  cell:
-  - 33
-  - 18
-- id: detector_11
-  cell:
-  - 33
-  - 47
-- id: detector_12
-  cell:
-  - 33
-  - 54
-- id: detector_13
-  cell:
-  - 20
-  - 18
-- id: detector_14
-  cell:
-  - 4
-  - 5
-- id: detector_15
-  cell:
-  - 8
-  - 33
-- id: detector_16
-  cell:
-  - 5
-  - 23
 - id: detector_17
   cell:
   - 24
-  - 11
+  - 55
 - id: detector_18
   cell:
-  - 15
-  - 28
+  - 33
+  - 35
 - id: detector_19
   cell:
-  - 33
-  - 44
+  - 7
+  - 23
 - id: detector_20
   cell:
-  - 9
-  - 4
+  - 6
+  - 43
 - id: detector_21
   cell:
-  - 34
-  - 57
+  - 33
+  - 63
 - id: detector_22
   cell:
-  - 0
-  - 47
+  - 33
+  - 18
 - id: detector_23
   cell:
-  - 12
-  - 0
+  - 33
+  - 47

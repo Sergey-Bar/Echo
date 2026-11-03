@@ -7,8 +7,7 @@
   const model = buildModel(DEMO);  // the tested rules: see docs/model.js and tests/test_demo_page.py
   const { H, W, open, isOpen, MOVES, tracks, noiseAt } = model;
   const cell = Math.floor(Math.min(1280 / W, 800 / H)), CW = W * cell, CH = H * cell;
-  const dpr = Math.min(2, window.devicePixelRatio || 1);
-  canvas.width = CW * dpr; canvas.height = CH * dpr;
+  let dpr = 1, streets = null, buildings = null;  // sized by setup(), again whenever the pixel density changes
   const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
   const C = {
     street: css("--street"), lane: css("--lane"), roof: css("--building"), roofEdge: css("--building-edge"),
@@ -23,7 +22,7 @@
     return c;
   }
   // Streets: asphalt with dashed centre lines down the middle of two-lane roads.
-  const streets = layer(g => {
+  const drawStreets = g => {
     g.fillStyle = C.street; g.fillRect(0, 0, CW, CH);
     g.strokeStyle = C.lane; g.lineWidth = Math.max(1, cell * 0.08); g.setLineDash([cell * 0.5, cell * 0.5]);
     g.beginPath();
@@ -38,9 +37,9 @@
       }
     }
     g.stroke();
-  });
+  };
   // Buildings: flat roofs, a darker parapet on every street-facing edge, and a few rooftop units.
-  const buildings = layer(g => {
+  const drawBuildings = g => {
     g.fillStyle = C.roof;
     for (let r = 0; r < H; r++) for (let c = 0; c < W; c++) if (!open[r][c]) g.fillRect(c * cell, r * cell, cell, cell);
     const edge = Math.max(2, cell * 0.14);
@@ -58,7 +57,14 @@
       const inner = !open[r][c] && MOVES.every(([dr, dc]) => !open[r + dr][c + dc]) && !open[r + 1][c + 1];
       if (inner && (r * 31 + c * 17) % 23 === 0) g.fillRect(c * cell + cell * 0.3, r * cell + cell * 0.3, cell * 1.1, cell * 0.8);
     }
-  });
+  };
+  function setup() {  // backing store and static layers at the current pixel density (sharp on retina)
+    dpr = Math.min(2, window.devicePixelRatio || 1);
+    canvas.width = CW * dpr; canvas.height = CH * dpr;
+    streets = layer(drawStreets); buildings = layer(drawBuildings);
+    dirty = true;
+    matchMedia(`(resolution: ${window.devicePixelRatio || 1}dppx)`).addEventListener("change", setup, { once: true });
+  }
 
   // Heatmap in two layers, one pixel per cell:
   // - glow: pale cyan to teal by loudness, scaled up smoothly, purely for looks;
@@ -162,9 +168,11 @@
       const r = a[0] + (b[0] - a[0]) * frac, c = a[1] + (b[1] - a[1]) * frac;
       car(c * cell + cell / 2, r * cell + cell / 2, t.heading);
     }
+    // Labels follow what is drawn, so they also update while the opening echo spreads on an unchanged frame.
+    const firingText = `${firingCount} of ${detectors.length} detectors firing`;
+    if (firingLabel.textContent !== firingText) firingLabel.textContent = firingText;
     if (frame !== shownFrame) {
       shownFrame = frame;
-      firingLabel.textContent = `${firingCount} of ${detectors.length} detectors firing`;
       frameLabel.textContent = `frame ${frame.toLocaleString("en-US")} of ${n_frames.toLocaleString("en-US")}`;
     }
     // Keep drawing while anything still moves; a paused, settled city costs nothing.
@@ -189,6 +197,7 @@
     playing = p; button.textContent = p ? "Pause" : "Play"; dirty = true;
   }
   button.addEventListener("click", () => setPlaying(!playing));
+  setup();
   setPlaying(playing);
   requestAnimationFrame(loop);
 })();

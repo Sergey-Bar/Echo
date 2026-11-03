@@ -153,11 +153,11 @@ def _block_intervals(pairs, vehicles, n_sources, n_frames, threshold, intervals,
         np.subtract(loudness, steps[pair], out=weight[:total])
         np.negative(weight[:total], out=weight[total:])
 
+        added = len(where)
         if not period:
             # A non-looping run's last end event is at n_frames, the spare slot of its row: no clipping needed.
             where.append(key)
             amount.append(weight)
-            pending += len(key)
         else:
             # Laps that end before the last frame need no clipping, so they are added in one broadcast; only the
             # last lap or two drop events at or after n_frames, which never affect a logged frame.
@@ -170,7 +170,7 @@ def _block_intervals(pairs, vehicles, n_sources, n_frames, threshold, intervals,
                 inside = frame + lap * period < n_frames
                 where.append(key[inside] + lap * period)
                 amount.append(weight[inside])
-            pending += len(key) * max(1, whole_laps)
+        pending += sum(len(events) for events in where[added:])
         if pending > FLUSH_EVENTS:
             change += np.bincount(np.concatenate(where), weights=np.concatenate(amount), minlength=change.size)
             where, amount, pending = [], [], 0
