@@ -1,0 +1,418 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Echo — city noise detection in seconds</title>
+<meta name="description" content="Echo computes which noise detectors fire across a simulated city, with exactly the same results as a frame-by-frame simulator, thousands of times faster.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=Public+Sans:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --paper: #EEF2F5;
+  --white: #FFFFFF;
+  --ink: #16263A;
+  --ink-soft: #4A5B6E;
+  --building: #C5D0DA;
+  --street: #F7F9FB;
+  --teal-1: #CDEDEF;
+  --teal-2: #8FD6DB;
+  --teal-3: #3FB5BF;
+  --teal-4: #0E9AA7;
+  --amber: #F2B705;
+  --line: #D5DDE5;
+  --display: "Archivo", "Arial Narrow", sans-serif;
+  --body: "Public Sans", system-ui, sans-serif;
+  --measure: 68ch;
+}
+* { box-sizing: border-box; }
+html { background: var(--paper); color: var(--ink); }
+body { margin: 0; font: 400 1.0625rem/1.6 var(--body); background: var(--paper); }
+a { color: var(--teal-4); text-underline-offset: 3px; text-decoration-thickness: 2px; }
+a:hover { color: var(--ink); }
+:focus-visible { outline: 3px solid var(--amber); outline-offset: 3px; }
+
+.wrap { max-width: 1120px; margin: 0 auto; padding: 0 24px; }
+.prose { max-width: var(--measure); }
+
+h1, h2, h3 { font-family: var(--display); font-stretch: 125%; line-height: 1.05; margin: 0; letter-spacing: -0.01em; }
+h1 { font-size: clamp(2.6rem, 6.2vw, 5rem); font-weight: 850; }
+h2 { font-size: clamp(1.8rem, 3.4vw, 2.6rem); font-weight: 800; margin-bottom: 20px; }
+h3 { font-size: 1.25rem; font-weight: 750; margin-bottom: 8px; }
+p { margin: 0 0 16px; }
+.lede { font-size: 1.25rem; line-height: 1.5; color: var(--ink-soft); max-width: 56ch; }
+
+/* Top bar */
+.bar { display: flex; align-items: center; justify-content: space-between; padding: 20px 0; }
+.mark { display: flex; align-items: center; gap: 10px; font: 850 1.35rem var(--display); font-stretch: 125%; color: var(--ink); text-decoration: none; }
+.mark svg { display: block; }
+.bar nav { display: flex; gap: 22px; font-weight: 600; font-size: .95rem; }
+.bar nav a { color: var(--ink); text-decoration: none; }
+.bar nav a:hover { color: var(--teal-4); }
+
+/* Hero */
+.hero { padding-top: 36px; padding-bottom: 56px; }
+.hero h1 { max-width: 15ch; margin-bottom: 20px; }
+.city {
+  margin-top: 40px; background: var(--white); border: 2px solid var(--ink);
+  display: grid; grid-template-columns: 1fr;
+}
+.city canvas { width: 100%; height: auto; display: block; image-rendering: pixelated; background: var(--street); }
+.city-foot { display: flex; flex-wrap: wrap; align-items: center; gap: 16px 28px; padding: 14px 18px; border-top: 2px solid var(--ink); font-size: .95rem; }
+.legend { display: flex; flex-wrap: wrap; gap: 8px 20px; color: var(--ink-soft); }
+.legend span { display: inline-flex; align-items: center; gap: 8px; }
+.sw { width: 14px; height: 14px; display: inline-block; }
+.sw-b { background: var(--building); }
+.sw-n { background: linear-gradient(90deg, var(--teal-1) 0 25%, var(--teal-2) 25% 50%, var(--teal-3) 50% 75%, var(--teal-4) 75%); }
+.sw-d { background: var(--white); border: 2px solid var(--ink); }
+.sw-f { background: var(--amber); border: 2px solid var(--ink); }
+.sw-v { background: var(--ink); border-radius: 50%; }
+.frame { margin-left: auto; font-variant-numeric: tabular-nums; color: var(--ink-soft); }
+button {
+  font: 700 .95rem var(--body); color: var(--white); background: var(--ink); border: 0;
+  padding: 10px 18px; cursor: pointer;
+}
+button:hover { background: var(--teal-4); }
+
+/* Sections */
+section { padding: 72px 0; border-top: 2px solid var(--line); }
+.cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 32px; margin-top: 32px; }
+.rule { background: var(--white); padding: 22px; border-left: 6px solid var(--teal-4); }
+.rule p { margin: 0; color: var(--ink-soft); }
+
+.steps { list-style: none; padding: 0; margin: 36px 0 0; display: grid; gap: 0; counter-reset: step; }
+.steps li { counter-increment: step; display: grid; grid-template-columns: 76px 1fr; gap: 20px; padding: 26px 0; border-top: 2px solid var(--line); }
+.steps li:first-child { border-top: 0; }
+.steps li::before {
+  content: counter(step); font: 850 2.6rem/1 var(--display); font-stretch: 125%;
+  color: var(--white); background: var(--teal-4); width: 64px; height: 64px; display: grid; place-items: center;
+}
+.steps p { margin: 0; color: var(--ink-soft); max-width: 62ch; }
+
+.insight { background: var(--ink); color: var(--white); padding: 40px; margin-top: 8px; }
+.insight h3 { color: var(--amber); font-size: 1.5rem; }
+.insight p { color: #D6DEE7; max-width: 64ch; }
+.insight code { background: #23384F; color: var(--white); }
+code { font: 500 .92em ui-monospace, "Cascadia Mono", Consolas, monospace; background: var(--white); padding: 2px 6px; }
+
+/* Results chart */
+.chart { margin-top: 32px; background: var(--white); padding: 28px; border: 2px solid var(--ink); }
+.row { display: grid; grid-template-columns: minmax(150px, 220px) 1fr; gap: 6px 20px; padding: 14px 0; border-top: 1px solid var(--line); }
+.row:first-child { border-top: 0; }
+.row .name { font-weight: 700; }
+.row .name small { display: block; font-weight: 400; color: var(--ink-soft); font-size: .85rem; }
+.bars { display: grid; gap: 6px; }
+.b { height: 18px; display: flex; align-items: center; }
+.b i { display: block; height: 100%; }
+.b span { margin-left: 10px; font-size: .9rem; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.b.before i { background: var(--building); }
+.b.after i { background: var(--teal-4); min-width: 3px; }
+.b.after span { font-weight: 700; }
+.axis { color: var(--ink-soft); font-size: .85rem; margin-top: 14px; }
+.speed { color: var(--teal-4); font-weight: 700; }
+
+table { border-collapse: collapse; width: 100%; margin-top: 24px; background: var(--white); font-variant-numeric: tabular-nums; }
+th, td { text-align: left; padding: 12px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-family: var(--display); font-stretch: 112%; font-weight: 750; border-bottom: 2px solid var(--ink); }
+.table-scroll { overflow-x: auto; }
+
+.checks { list-style: none; padding: 0; margin: 28px 0 0; display: grid; gap: 14px; }
+.checks li { display: grid; grid-template-columns: 28px 1fr; gap: 12px; align-items: start; }
+.checks li::before { content: ""; width: 22px; height: 22px; margin-top: 3px; background: var(--teal-4);
+  clip-path: polygon(14% 52%, 0 66%, 38% 100%, 100% 22%, 86% 8%, 38% 72%); }
+
+pre { background: var(--ink); color: #E8EEF4; padding: 22px; overflow-x: auto; font: 500 .95rem/1.6 ui-monospace, "Cascadia Mono", Consolas, monospace; margin: 20px 0 0; }
+pre .c { color: #8FA3B8; }
+
+footer { padding: 40px 0 56px; border-top: 2px solid var(--line); color: var(--ink-soft); font-size: .95rem; }
+footer p { max-width: 80ch; }
+
+@media (max-width: 640px) {
+  .wrap { padding: 0 16px; }
+  .bar nav { display: none; }
+  .row { grid-template-columns: 1fr; }
+  .steps li { grid-template-columns: 52px 1fr; }
+  .steps li::before { width: 48px; height: 48px; font-size: 1.9rem; }
+  .insight { padding: 26px; }
+  .frame { margin-left: 0; }
+}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header class="bar">
+    <a class="mark" href="#top" aria-label="Echo home">
+      <svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true">
+        <rect x="11" y="11" width="8" height="8" fill="#16263A"/>
+        <path d="M15 5 L25 15 L15 25 L5 15 Z" fill="none" stroke="#0E9AA7" stroke-width="2.5"/>
+        <path d="M15 0.5 L29.5 15 L15 29.5 L0.5 15 Z" fill="none" stroke="#8FD6DB" stroke-width="1.5"/>
+      </svg>
+      Echo
+    </a>
+    <nav aria-label="Sections">
+      <a href="#how">How it works</a>
+      <a href="#results">Results</a>
+      <a href="#proof">Proof</a>
+      <a href="https://github.com/Sergey-Bar/Echo">GitHub</a>
+    </nav>
+  </header>
+</div>
+
+<main id="top">
+  <div class="wrap hero">
+    <h1>Hear the whole city in a second.</h1>
+    <p class="lede">Echo works out which noise detectors fire across a simulated city, frame by frame, with exactly the same answer as the original simulator. Runs that took hours now take seconds.</p>
+
+    <figure class="city" aria-label="Live demo: vehicles drive through a city grid, their noise spreads along the streets and detectors light up when the noise reaches the threshold">
+      <canvas id="city" width="640" height="400"></canvas>
+      <figcaption class="city-foot">
+        <button id="toggle" type="button" aria-pressed="false">Pause</button>
+        <div class="legend">
+          <span><i class="sw sw-v"></i>Vehicle</span>
+          <span><i class="sw sw-n"></i>Noise, darkest is loud enough to fire</span>
+          <span><i class="sw sw-b"></i>Building</span>
+          <span><i class="sw sw-d"></i>Detector</span>
+          <span><i class="sw sw-f"></i>Detector firing</span>
+        </div>
+        <span class="frame" id="frame" aria-live="off">frame 0</span>
+      </figcaption>
+    </figure>
+  </div>
+
+  <section id="problem">
+    <div class="wrap">
+      <div class="prose">
+        <h2>The problem</h2>
+        <p>Vehicles drive through a city. Their noise spreads along the streets and around buildings, never through them. Detectors around the city fire whenever the noise they hear adds up to a threshold. The job is to report, for every detector, exactly which frames it fired on.</p>
+        <p>The original simulator rebuilt a full noise map for every vehicle on every frame. On a busy city that meant <strong>about 42 hours</strong> for one run.</p>
+      </div>
+      <div class="cols">
+        <div class="rule"><h3>Streets carry sound</h3><p>A vehicle's noise at a cell is its loudness minus the number of street steps to get there.</p></div>
+        <div class="rule"><h3>Detectors add it up</h3><p>A detector fires when the sum from all vehicles reaches the threshold.</p></div>
+        <div class="rule"><h3>Exact or nothing</h3><p>The output has to match the original simulator to the frame, on every city.</p></div>
+        <div class="rule"><h3>One core, 4 GB</h3><p>Up to 400×400 cells, 100 vehicles, 20,000 detectors and 50,000 frames, in under 10 minutes.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="how">
+    <div class="wrap">
+      <div class="prose">
+        <h2>How Echo does it</h2>
+        <p>Two observations remove almost all the work. The log only needs the noise at detector cells, not the whole map. And a vehicle's noise only changes when it moves to another cell, not on every frame.</p>
+      </div>
+      <ol class="steps">
+        <li><div><h3>Listen from the detectors</h3><p>Echo measures street distances once from each detector, out to the loudest vehicle's reach. Distance on a street grid is the same in both directions, so this gives exactly the numbers the simulator computed from each vehicle.</p></div></li>
+        <li><div><h3>Turn routes into segments</h3><p>Each vehicle becomes a short list of "on this cell from frame a to frame b". Looping vehicles repeat the same lap, so Echo builds one lap and shifts copies of it in time.</p></div></li>
+        <li><div><h3>Add up changes, not frames</h3><p>When a vehicle arrives near a detector, its noise is added at that frame; when it leaves, it is subtracted. One cumulative sum gives every detector's exact noise on every frame, in a handful of numpy operations.</p></div></li>
+      </ol>
+      <div class="insight">
+        <h3>The route trick</h3>
+        <p>Vehicles follow shortest paths, and when two paths are equally short the simulator's queue picks one in a specific order. We showed that this order always gives the <strong>alphabetically first shortest path</strong>, reading moves as up, down, left, right.</p>
+        <p>So Echo measures distances from the goal once, then walks from the start, always taking the first direction that gets closer. That gives the same routes as the original, checked against it on 5,000 random routes.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="results">
+    <div class="wrap">
+      <div class="prose">
+        <h2>Results</h2>
+        <p>Same city, same answer, a different order of magnitude. Times below were measured on one CPU core in a Linux container with a 4 GB cap. The "before" times for the four large cities are projected from the original's first 20 frames, because full runs take hours.</p>
+      </div>
+      <div class="chart" role="img" aria-label="Run time before and after, on a log scale. Busy city: 42 hours to 0.53 seconds. Sensor grid: 7 hours to 6.7 seconds. Long patrol: 6 hours to 3.7 seconds. Big city: 6.5 hours to 3.2 seconds. Small city: 2.7 seconds to 0.02 seconds.">
+        <div id="bars"></div>
+        <p class="axis">Bar length uses a log scale: each step is ten times longer.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="proof">
+    <div class="wrap">
+      <div class="prose">
+        <h2>Proof it is exact</h2>
+        <p>Fast is easy if you're allowed to be wrong. Echo is not, so every change had to pass all of these before it was kept.</p>
+      </div>
+      <ul class="checks prose">
+        <li><span>Every example city gives a log identical to the original's reference, and frame-by-frame snapshots match on the small city.</span></li>
+        <li><span>300 random cities, built to hit edge cases: walled-off regions, vehicles louder than the map, parked vehicles, waits, loops, runs cut short, thresholds from trivial to unreachable. Each one is compared with the original simulator.</span></li>
+        <li><span>5,000 random routes compared with the original path search, including a goal that cannot be reached.</span></li>
+        <li><span>The tests were checked by breaking the code on purpose: changing "at least the threshold" to "above the threshold" makes them fail. They also caught a real bug during development.</span></li>
+        <li><span>The included demo city runs in 0.03 s with Echo and 10.6 s with the original engine, with identical logs. Anyone can rerun it.</span></li>
+      </ul>
+    </div>
+  </section>
+
+  <section id="limits">
+    <div class="wrap">
+      <div class="prose">
+        <h2>Pushed to the limits</h2>
+        <p>The examples each stress one thing. We built cities that stress everything at once, then ran them on a single core with a hard 4 GB memory cap, where going over the limit kills the run.</p>
+      </div>
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th scope="col">City</th><th scope="col">Time</th><th scope="col">Peak memory</th></tr></thead>
+          <tbody>
+            <tr><td>100 looping vehicles, 20,000 detectors, 50,000 frames on 400×400</td><td>169 s</td><td>875 MB</td></tr>
+            <tr><td>100 one-way vehicles with 150 stops each, 20,000 detectors, 50,000 frames</td><td>277 s</td><td>929 MB</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="prose" style="margin-top:18px;color:var(--ink-soft)">Both finish well inside the 10-minute limit and use under a quarter of the memory. The first one did not finish at all before looping vehicles reused their laps.</p>
+    </div>
+  </section>
+
+  <section id="run">
+    <div class="wrap">
+      <div class="prose">
+        <h2>Run it</h2>
+        <p>Python 3.12+ with numpy and pyyaml. The command line is the same as the original simulator's.</p>
+      </div>
+<pre><span class="c"># install</span>
+pip install -r requirements.txt
+
+<span class="c"># run the demo city: writes log.json</span>
+python -m citynoise run examples/demo.yaml
+
+<span class="c"># watch it (uses the original frame-by-frame engine)</span>
+python -m citynoise run examples/demo.yaml --render
+
+<span class="c"># make your own city</span>
+python tools/make_scenario.py examples/mine --vehicles 20 --detectors 500 --frames 20000
+
+<span class="c"># prove it matches the original</span>
+python -m pytest tests</pre>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <p>Echo by <a href="https://github.com/Sergey-Bar">Sergey Bar</a>. The baseline frame-by-frame simulator was provided as a performance challenge. The Echo engine, route planner, tests and benchmarks were built on top of it, with Claude Code and a custom agent setup.</p>
+  </div>
+</footer>
+
+<script>
+const DEMO = {"map": ["................................................................", "................................................................", "..#######..######.........########..######..###########..#####..", "..#######..######.........########..######..###########..#####..", ".......##..######.........########..######..###########..#####..", "..##...##..######.........########..######..###########..#####..", "..#######..######.........########..######..###########..#####..", "..#######..######.........########..######..###########..#####..", "................................................................", "................................................................", "..###########..########..#######..#######..#########..#######...", "..###########..########..#######..#######..#########..#######...", "..###########..########..#######..#######..#########..#######...", "..###########..########..#######..#######..#########..#######...", "................................................................", "................................................................", "..########..######..########..##########..##########..########..", "..########..######..########..##########..##########..########..", "..########..######..########..##########..##########..########..", "..########..######..########..##########..##########..########..", "..########..######..########..##########..##########..########..", "..########..######..########..##########..##########..########..", "..########..######..########..##########..##########..########..", "..########..######..########..##########..##########..########..", "................................................................", "................................................................", "..##########..######..###########..############..######..#####..", "..##########..######..###########..############..######..#####..", "..........##..######..###########..############..######..#####..", "..##......##..######..###########..############..######..#####..", "..##......##..######..###########..############..######..#####..", "..##########..######..###########..############..######..#####..", "..##########..######..###########..############..######..#####..", "................................................................", "................................................................", "..############..#########..#####..#########..############..###..", "..############..#########..#####..#########..############..###..", "............##..#########..#####..#########..############..###..", "................................................................", "................................................................"], "vehicles": [{"id": "vehicle_0", "loudness": 24, "frames_per_cell": 2, "loop": true, "waypoints": [{"cell": [9, 18], "wait_frames": 0}, {"cell": [34, 11], "wait_frames": 30}]}, {"id": "vehicle_1", "loudness": 28, "frames_per_cell": 3, "loop": false, "waypoints": [{"cell": [25, 46], "wait_frames": 30}, {"cell": [3, 43], "wait_frames": 10}, {"cell": [31, 56], "wait_frames": 30}, {"cell": [38, 9], "wait_frames": 0}]}, {"id": "vehicle_2", "loudness": 33, "frames_per_cell": 2, "loop": true, "waypoints": [{"cell": [8, 47], "wait_frames": 10}, {"cell": [9, 34], "wait_frames": 10}, {"cell": [14, 25], "wait_frames": 0}]}, {"id": "vehicle_3", "loudness": 32, "frames_per_cell": 4, "loop": true, "waypoints": [{"cell": [8, 36], "wait_frames": 30}, {"cell": [37, 2], "wait_frames": 30}, {"cell": [38, 43], "wait_frames": 30}, {"cell": [7, 43], "wait_frames": 0}]}, {"id": "vehicle_4", "loudness": 18, "frames_per_cell": 3, "loop": true, "waypoints": [{"cell": [33, 50], "wait_frames": 0}, {"cell": [1, 63], "wait_frames": 0}, {"cell": [2, 22], "wait_frames": 0}]}, {"id": "vehicle_5", "loudness": 34, "frames_per_cell": 1, "loop": false, "waypoints": [{"cell": [38, 44], "wait_frames": 0}, {"cell": [37, 6], "wait_frames": 0}]}], "detectors": [{"id": "detector_0", "cell": [25, 16]}, {"id": "detector_1", "cell": [8, 42]}, {"id": "detector_2", "cell": [15, 2]}, {"id": "detector_3", "cell": [24, 21]}, {"id": "detector_4", "cell": [39, 53]}, {"id": "detector_5", "cell": [24, 55]}, {"id": "detector_6", "cell": [33, 35]}, {"id": "detector_7", "cell": [7, 23]}, {"id": "detector_8", "cell": [6, 43]}, {"id": "detector_9", "cell": [33, 63]}, {"id": "detector_10", "cell": [33, 18]}, {"id": "detector_11", "cell": [33, 47]}, {"id": "detector_12", "cell": [33, 54]}, {"id": "detector_13", "cell": [20, 18]}, {"id": "detector_14", "cell": [4, 5]}, {"id": "detector_15", "cell": [8, 33]}, {"id": "detector_16", "cell": [5, 23]}, {"id": "detector_17", "cell": [24, 11]}, {"id": "detector_18", "cell": [15, 28]}, {"id": "detector_19", "cell": [33, 44]}, {"id": "detector_20", "cell": [9, 4]}, {"id": "detector_21", "cell": [34, 57]}, {"id": "detector_22", "cell": [0, 47]}, {"id": "detector_23", "cell": [12, 0]}], "threshold": 20, "n_frames": 1200};
+
+// Bars: results on a log scale.
+(() => {
+  const rows = [
+    ["Busy city", "80 vehicles, 20 detectors", 42 * 3600, 0.53],
+    ["Sensor grid", "6 vehicles, 12,000 detectors", 7 * 3600, 6.7],
+    ["Long patrol", "12 vehicles, 6,000 detectors", 6 * 3600, 3.7],
+    ["Big city", "400×400, 2,000 detectors", 6.5 * 3600, 3.2],
+    ["Small city", "3 vehicles, 8 detectors", 2.7, 0.02],
+  ];
+  const lo = Math.log10(0.01), hi = Math.log10(42 * 3600 * 1.4);
+  const pct = s => Math.max(0.6, (Math.log10(s) - lo) / (hi - lo) * 100);
+  const fmt = s => s >= 3600 ? `${+(s / 3600).toFixed(1)} h` : `${+s.toPrecision(2)} s`;
+  const speed = (a, b) => {
+    const x = a / b;
+    return x >= 1000 ? `${Math.round(x / 1000).toLocaleString("en-US")},000× faster` : `${Math.round(x)}× faster`;
+  };
+  document.getElementById("bars").innerHTML = rows.map(([name, info, before, after]) => `
+    <div class="row">
+      <div class="name">${name}<small>${info}</small></div>
+      <div class="bars">
+        <div class="b before"><i style="width:${pct(before)}%"></i><span>${fmt(before)} before</span></div>
+        <div class="b after"><i style="width:${pct(after)}%"></i><span>${fmt(after)} with Echo, <span class="speed">${speed(before, after)}</span></span></div>
+      </div>
+    </div>`).join("");
+})();
+
+// Live city: the demo scenario, played with the same rules (BFS noise, shortest-path routes, threshold).
+(() => {
+  const canvas = document.getElementById("city"), ctx = canvas.getContext("2d");
+  const button = document.getElementById("toggle"), frameLabel = document.getElementById("frame");
+  const { map, vehicles, detectors, threshold, n_frames } = DEMO;
+  const H = map.length, W = map[0].length, open = map.map(r => [...r].map(c => c === "."));
+  const cell = Math.floor(Math.min(1280 / W, 800 / H));
+  canvas.width = W * cell; canvas.height = H * cell;
+  const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+  const C = { street: css("--street"), building: css("--building"), ink: css("--ink"), amber: css("--amber"),
+              white: css("--white"), teal: [css("--teal-1"), css("--teal-2"), css("--teal-3"), css("--teal-4")] };
+  const MOVES = [[-1, 0], [1, 0], [0, -1], [0, 1]];
+
+  function bfs(r0, c0, limit) {
+    const d = new Int32Array(H * W).fill(-1), q = [r0 * W + c0];
+    d[q[0]] = 0;
+    for (let i = 0; i < q.length; i++) {
+      const k = q[i], r = (k / W) | 0, c = k % W;
+      if (d[k] >= limit) continue;
+      for (const [dr, dc] of MOVES) {
+        const rr = r + dr, cc = c + dc;
+        if (rr < 0 || rr >= H || cc < 0 || cc >= W || !open[rr][cc] || d[rr * W + cc] >= 0) continue;
+        d[rr * W + cc] = d[k] + 1; q.push(rr * W + cc);
+      }
+    }
+    return d;
+  }
+  function path(a, b) {  // lexicographically first shortest path, as in Echo
+    const toGoal = bfs(b[0], b[1], 1e9), out = [a];
+    let [r, c] = a;
+    while (r !== b[0] || c !== b[1]) {
+      const here = toGoal[r * W + c];
+      for (const [dr, dc] of MOVES) {
+        const rr = r + dr, cc = c + dc;
+        if (rr >= 0 && rr < H && cc >= 0 && cc < W && toGoal[rr * W + cc] === here - 1) { r = rr; c = cc; break; }
+      }
+      out.push([r, c]);
+    }
+    return out;
+  }
+  // Timeline per vehicle: cell at each frame of one lap (or of the whole trip, then parked).
+  const tracks = vehicles.map(v => {
+    const wps = v.loop ? [...v.waypoints, v.waypoints[0]] : v.waypoints, cells = [];
+    const hold = (c, n) => { for (let i = 0; i < n; i++) cells.push(c); };
+    hold(wps[0].cell, wps[0].wait_frames || 0);
+    for (let i = 1; i < wps.length; i++) {
+      const p = path(wps[i - 1].cell, wps[i].cell);
+      for (let j = 0; j < p.length - 1; j++) hold(p[j], v.frames_per_cell);
+      if (!(v.loop && i === wps.length - 1)) hold(wps[i].cell, wps[i].wait_frames || 0);
+    }
+    const last = v.loop ? null : wps[wps.length - 1].cell;
+    return { v, cells, at: f => v.loop ? cells[f % cells.length] : (cells[f] || last) };
+  });
+
+  let frame = 0, playing = !matchMedia("(prefers-reduced-motion: reduce)").matches, last = 0;
+  function draw() {
+    const noise = new Float32Array(H * W);
+    for (const t of tracks) {
+      const [r, c] = t.at(frame), L = t.v.loudness, d = bfs(r, c, L - 1);
+      for (let k = 0; k < d.length; k++) if (d[k] >= 0 && d[k] < L) noise[k] += L - d[k];
+    }
+    for (let r = 0; r < H; r++) for (let c = 0; c < W; c++) {
+      const n = noise[r * W + c];
+      // Darkest step = loud enough to fire a detector on this cell.
+      const level = n >= threshold ? 3 : n >= threshold * 0.6 ? 2 : n >= threshold * 0.3 ? 1 : 0;
+      ctx.fillStyle = !open[r][c] ? C.building : n <= 0 ? C.street : C.teal[level];
+      ctx.fillRect(c * cell, r * cell, cell, cell);
+    }
+    for (const det of detectors) {
+      const [r, c] = det.cell, firing = noise[r * W + c] >= threshold;
+      ctx.fillStyle = C.ink; ctx.fillRect(c * cell - 2, r * cell - 2, cell + 4, cell + 4);
+      ctx.fillStyle = firing ? C.amber : C.white; ctx.fillRect(c * cell, r * cell, cell, cell);
+    }
+    for (const t of tracks) {
+      const [r, c] = t.at(frame);
+      ctx.fillStyle = C.ink; ctx.beginPath();
+      ctx.arc(c * cell + cell / 2, r * cell + cell / 2, cell * 0.75, 0, Math.PI * 2); ctx.fill();
+    }
+    frameLabel.textContent = `frame ${frame.toLocaleString("en-US")} of ${n_frames.toLocaleString("en-US")}`;
+  }
+  function tick(t) {
+    if (playing && t - last > 50) { frame = (frame + 1) % n_frames; last = t; draw(); }
+    requestAnimationFrame(tick);
+  }
+  function setPlaying(p) {
+    playing = p; button.textContent = p ? "Pause" : "Play"; button.setAttribute("aria-pressed", String(!p));
+  }
+  button.addEventListener("click", () => setPlaying(!playing));
+  setPlaying(playing); draw(); requestAnimationFrame(tick);
+})();
+</script>
+</body>
+</html>
