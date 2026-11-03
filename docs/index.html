@@ -391,26 +391,63 @@ const DEMO = {"map": [".........................................................
     }
     return out;
   }
-  // Timeline per vehicle: cell at each frame of one lap (or of the whole trip, then parked).
+  // Timeline per vehicle, one entry per frame of a lap (or of the whole trip, then parked):
+  // `cells` is the cell the noise rule uses; `pos` is where to draw it, sliding toward the next cell
+  // while the vehicle moves, exactly like the simulator's own draw positions.
   const tracks = vehicles.map(v => {
-    const wps = v.loop ? [...v.waypoints, v.waypoints[0]] : v.waypoints, cells = [];
-    const hold = (c, n) => { for (let i = 0; i < n; i++) cells.push(c); };
-    hold(wps[0].cell, wps[0].wait_frames || 0);
+    const wps = v.loop ? [...v.waypoints, v.waypoints[0]] : v.waypoints, cells = [], pos = [];
+    const wait = (c, n) => { for (let i = 0; i < n; i++) { cells.push(c); pos.push(c); } };
+    wait(wps[0].cell, wps[0].wait_frames || 0);
     for (let i = 1; i < wps.length; i++) {
-      const p = path(wps[i - 1].cell, wps[i].cell);
-      for (let j = 0; j < p.length - 1; j++) hold(p[j], v.frames_per_cell);
-      if (!(v.loop && i === wps.length - 1)) hold(wps[i].cell, wps[i].wait_frames || 0);
+      const p = path(wps[i - 1].cell, wps[i].cell), n = v.frames_per_cell;
+      for (let j = 0; j < p.length - 1; j++) {
+        const [a, b] = [p[j], p[j + 1]];
+        for (let k = 0; k < n; k++) { cells.push(a); pos.push([a[0] + (b[0] - a[0]) * k / n, a[1] + (b[1] - a[1]) * k / n]); }
+      }
+      if (!(v.loop && i === wps.length - 1)) wait(wps[i].cell, wps[i].wait_frames || 0);
     }
     const last = v.loop ? null : wps[wps.length - 1].cell;
-    return { v, cells, at: f => v.loop ? cells[f % cells.length] : (cells[f] || last) };
+    const pick = list => f => v.loop ? list[f % list.length] : (list[f] || last);
+    return { v, cellAt: pick(cells), posAt: pick(pos) };
   });
 
-  let frame = 0, playing = !matchMedia("(prefers-reduced-motion: reduce)").matches, last = 0;
-  function draw() {
-    const noise = new Float32Array(H * W);
+  // Noise one vehicle makes from one cell, cached: flat triples of (cell index, level, steps).
+  const cache = new Map();
+  function contribution(r, c, L) {
+    const key = (r * W + c) * 128 + L;
+    if (!cache.has(key)) {
+      const d = bfs(r, c, L - 1), out = [];
+      for (let k = 0; k < d.length; k++) if (d[k] >= 0 && d[k] < L) out.push(k, L - d[k], d[k]);
+      cache.set(key, Int32Array.from(out));
+    }
+    return cache.get(key);
+  }
+  // reach < 1 draws only the part of each vehicle's sound within that fraction of its range (the opening echo).
+  function noiseAt(f, reach) {
+    const out = new Float32Array(H * W);
     for (const t of tracks) {
-      const [r, c] = t.at(frame), L = t.v.loudness, d = bfs(r, c, L - 1);
-      for (let k = 0; k < d.length; k++) if (d[k] >= 0 && d[k] < L) noise[k] += L - d[k];
+      const [r, c] = t.cellAt(f), L = t.v.loudness, list = contribution(r, c, L), limit = reach * L;
+      for (let i = 0; i < list.length; i += 3) if (list[i + 2] <= limit) out[list[i]] += list[i + 1];
+    }
+    return out;
+  }
+
+  const SIM_FPS = 20, ECHO_MS = 700, PING_MS = 400;
+  const easeOut = p => 1 - (1 - p) ** 3;
+  const reduced = matchMedia("(prefers-reduced-motion: reduce)");
+  let motion = !reduced.matches;
+  reduced.addEventListener("change", e => { motion = !e.matches; dirty = true; });
+
+  let playing = motion, simTime = 0, shownFrame = -1, echoStart = performance.now(), lastNow = echoStart;
+  let onScreen = true, dirty = true, noise = null, noiseFrame = -1;
+  const firing = new Uint8Array(detectors.length), pingStart = new Float64Array(detectors.length).fill(-Infinity);
+
+  function render(now) {
+    const frame = Math.floor(simTime), frac = simTime - frame;
+    const echo = motion ? Math.min(1, (now - echoStart) / ECHO_MS) : 1;
+    if (echo < 1 || noiseFrame !== frame) {
+      noise = noiseAt(frame, echo < 1 ? easeOut(echo) : 1);
+      noiseFrame = echo < 1 ? -1 : frame;
     }
     for (let r = 0; r < H; r++) for (let c = 0; c < W; c++) {
       const n = noise[r * W + c];
@@ -419,33 +456,61 @@ const DEMO = {"map": [".........................................................
       ctx.fillStyle = !open[r][c] ? C.building : n <= 0 ? C.street : C.teal[level];
       ctx.fillRect(c * cell, r * cell, cell, cell);
     }
-    let firingCount = 0;
-    for (const det of detectors) {
-      const [r, c] = det.cell, firing = noise[r * W + c] >= threshold, x = c * cell, y = r * cell;
-      if (firing) {  // shape cue as well as colour: an outer ring around a firing detector
+    let firingCount = 0, pinging = false;
+    detectors.forEach((det, i) => {
+      const [r, c] = det.cell, on = noise[r * W + c] >= threshold, x = c * cell, y = r * cell;
+      if (on && !firing[i] && motion) pingStart[i] = now;
+      firing[i] = on;
+      if (on) {  // shape cue as well as colour: a ring stays around a firing detector
         firingCount++;
         ctx.strokeStyle = C.ink; ctx.lineWidth = 2; ctx.strokeRect(x - 5, y - 5, cell + 10, cell + 10);
       }
+      const ping = (now - pingStart[i]) / PING_MS;
+      if (ping < 1) {  // one expanding, fading ring as a detector starts firing
+        pinging = true;
+        const grow = 5 + easeOut(ping) * cell * 1.4;
+        ctx.globalAlpha = 1 - ping; ctx.strokeStyle = C.amber; ctx.lineWidth = 3;
+        ctx.strokeRect(x - grow, y - grow, cell + grow * 2, cell + grow * 2);
+        ctx.globalAlpha = 1;
+      }
       ctx.fillStyle = C.ink; ctx.fillRect(x - 2, y - 2, cell + 4, cell + 4);
-      ctx.fillStyle = firing ? C.amber : C.white; ctx.fillRect(x, y, cell, cell);
-    }
-    firingLabel.textContent = `${firingCount} of ${detectors.length} detectors firing`;
+      ctx.fillStyle = on ? C.amber : C.white; ctx.fillRect(x, y, cell, cell);
+    });
     for (const t of tracks) {
-      const [r, c] = t.at(frame);
+      const a = motion ? t.posAt(frame) : t.cellAt(frame), b = motion ? t.posAt(frame + 1) : a;
+      const r = a[0] + (b[0] - a[0]) * frac, c = a[1] + (b[1] - a[1]) * frac;
       ctx.fillStyle = C.ink; ctx.beginPath();
       ctx.arc(c * cell + cell / 2, r * cell + cell / 2, cell * 0.75, 0, Math.PI * 2); ctx.fill();
     }
-    frameLabel.textContent = `frame ${frame.toLocaleString("en-US")} of ${n_frames.toLocaleString("en-US")}`;
+    if (frame !== shownFrame) {
+      shownFrame = frame;
+      firingLabel.textContent = `${firingCount} of ${detectors.length} detectors firing`;
+      frameLabel.textContent = `frame ${frame.toLocaleString("en-US")} of ${n_frames.toLocaleString("en-US")}`;
+    }
+    // Keep drawing while anything still moves; a paused, settled city costs nothing.
+    dirty = playing || echo < 1 || pinging;
   }
-  function tick(t) {
-    if (playing && t - last > 50) { frame = (frame + 1) % n_frames; last = t; draw(); }
-    requestAnimationFrame(tick);
+
+  function loop(now) {
+    const dt = Math.min(100, now - lastNow);  // a long gap (hidden tab) never jumps the simulation ahead
+    lastNow = now;
+    if (onScreen && !document.hidden) {
+      if (playing) {
+        simTime += dt * SIM_FPS / 1000;
+        if (simTime >= n_frames) { simTime = 0; echoStart = now; shownFrame = -1; }  // replay the echo on restart
+      }
+      if (dirty) render(now);
+    }
+    requestAnimationFrame(loop);
   }
+
+  new IntersectionObserver(([entry]) => { onScreen = entry.isIntersecting; dirty = true; }).observe(canvas);
   function setPlaying(p) {
-    playing = p; button.textContent = p ? "Pause" : "Play";
+    playing = p; button.textContent = p ? "Pause" : "Play"; dirty = true;
   }
   button.addEventListener("click", () => setPlaying(!playing));
-  setPlaying(playing); draw(); requestAnimationFrame(tick);
+  setPlaying(playing);
+  requestAnimationFrame(loop);
 })();
 </script>
 </body>
